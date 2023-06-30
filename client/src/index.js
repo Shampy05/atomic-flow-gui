@@ -5,8 +5,6 @@ import App from './App';
 import {configureStore} from "@reduxjs/toolkit";
 import globalReducer from "state";
 import {Provider} from "react-redux";
-import {DevSupport} from "@react-buddy/ide-toolbox";
-import {ComponentPreviews, useInitial} from "./dev";
 
 const store = configureStore({
     reducer: {
