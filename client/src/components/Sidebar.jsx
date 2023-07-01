@@ -18,6 +18,7 @@ import {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FlexBetween from "./FlexBetween";
+import CenteredBox from "./CenteredBox";
 
 
 const Sidebar = ({
@@ -32,26 +33,28 @@ const Sidebar = ({
     const theme = useTheme()
     return (
         <Box component="nav">
-            {isSidebarOpen && (
-                <Drawer
-                    open={isSidebarOpen}
-                    onClose={() => setIsSidebarOpen(false)}
-                    variant="persistent"
-                    anchor="left"
-                    sx={{
-                        width: drawerWidth,
-                        "& .MuiDrawer-paper": {
-                            color: theme.palette.secondary[200],
-                            background: theme.palette.background.alt,
-                            boxSizing: "border-box",
-                            borderWidth: isNonMobile ? "0px" : "2px",
+            <CenteredBox
+                position="fixed"
+                top={0} // Position from top
+                left={0} // Position from left
+                bottom={0} // Position from bottom
+            >
+                {isSidebarOpen && (
+                    <Box
+                        open={isSidebarOpen}
+                        onClose={() => setIsSidebarOpen(false)}
+                        sx={{
                             width: drawerWidth,
-                        }
-                    }}
-                >
-
-                </Drawer>
-            )}
+                            height: '50vh',
+                            backgroundColor: theme.palette.background.alt,
+                            '&:hover': {
+                                backgroundColor: 'primary.main',
+                                opacity: [0.9, 0.8, 0.7],
+                            },
+                        }}
+                    />
+                )}
+            </CenteredBox>
         </Box>
     )
 }

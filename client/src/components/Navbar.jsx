@@ -10,9 +10,13 @@ import {
 import FlexBetween from "components/FlexBetween"
 import { useDispatch } from "react-redux"
 import { setMode } from "state"
-import {AppBar, IconButton, InputBase, Toolbar, useTheme} from "@mui/material";
+import {AppBar, IconButton, InputBase, ToggleButton, Toolbar, useTheme} from "@mui/material";
 
-const Navbar = () => {
+const Navbar =
+    ({
+    isSidebarOpen,
+    setIsSidebarOpen
+    }) => {
     const dispatch = useDispatch()
     const theme = useTheme()
     return (
@@ -27,9 +31,12 @@ const Navbar = () => {
                 sx={{ justifyContent: "space-between" }}
             >
                 <FlexBetween>
-                    <IconButton onClick={() => console.log('Clicking on menu button')}>
-                        <MenuIcon/>
-                    </IconButton>
+                    <ToggleButton
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        value={isSidebarOpen}
+                    >
+                        <MenuIcon />
+                    </ToggleButton>
                     <FlexBetween
                         backgroundColor={theme.palette.background.default}
                         borderRadius="9px"
@@ -44,13 +51,13 @@ const Navbar = () => {
                 </FlexBetween>
 
                 <FlexBetween gap="1.5rem">
-                    <IconButton onClick={() => dispatch(setMode())}>
-                        {theme.palette.mode === "dark" ? (
-                            <DarkModeOutlined sx={{ fontSize: "25px"}} />
-                        ) : (
-                            <LightModeOutlined sx={{ fontSize: "25px"}} />
-                        )}
-                    </IconButton>
+                    {/*<IconButton onClick={() => dispatch(setMode())}>*/}
+                    {/*    {theme.palette.mode === "dark" ? (*/}
+                    {/*        <DarkModeOutlined sx={{ fontSize: "25px"}} />*/}
+                    {/*    ) : (*/}
+                    {/*        <LightModeOutlined sx={{ fontSize: "25px"}} />*/}
+                    {/*    )}*/}
+                    {/*</IconButton>*/}
                     <IconButton>
                         <SettingsOutlined sx={{ fontSize: "25px"}} />
                     </IconButton>
