@@ -1,70 +1,45 @@
-import React, { useState } from "react"
+import React, { useState } from "react";
 import {
     LightModeOutlined,
     DarkModeOutlined,
     Menu as MenuIcon,
     SettingsOutlined,
     ArrowDropDownOutlined,
-    HelpOutlineOutlined, Search,
-} from "@mui/icons-material"
-import FlexBetween from "components/FlexBetween"
-import { useDispatch } from "react-redux"
-import { setMode } from "state"
-import {AppBar, IconButton, InputBase, ToggleButton, Toolbar, useTheme} from "@mui/material";
+    HelpOutlineOutlined,
+} from "@mui/icons-material";
+import FlexBetween from "components/FlexBetween";
+import { useDispatch } from "react-redux";
+import { setMode } from "state";
+import { AppBar, IconButton, Box, useTheme } from "@mui/material";
 
-const Navbar =
-    ({
-    isSidebarOpen,
-    setIsSidebarOpen
-    }) => {
-    const dispatch = useDispatch()
-    const theme = useTheme()
+const Navbar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+    const dispatch = useDispatch();
+    const theme = useTheme();
     return (
         <AppBar
             sx={{
-                position: "static",
-                background: "none",
+                display: "flex",
                 boxShadow: "none",
+                width: "100%",
+                height: "fit-content",
             }}
         >
-            <Toolbar
-                sx={{ justifyContent: "space-between" }}
-            >
-                <FlexBetween>
-                    <ToggleButton
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        value={isSidebarOpen}
-                    >
-                        <MenuIcon />
-                    </ToggleButton>
-                    <FlexBetween
-                        backgroundColor={theme.palette.background.default}
-                        borderRadius="9px"
-                        gap="3rem"
-                        padding="0.5rem 1rem"
-                    >
-                        <InputBase placeholder="Search" />
-                        <IconButton>
-                            <Search />
-                        </IconButton>
-                    </FlexBetween>
-                </FlexBetween>
+            <Box display="flex" justifyContent="space-between">
+                <IconButton onClick={() => setIsSidebarOpen(!isSidebarOpen)} value={isSidebarOpen}>
+                    <MenuIcon />
+                </IconButton>
 
-                <FlexBetween gap="1.5rem">
-                    {/*<IconButton onClick={() => dispatch(setMode())}>*/}
-                    {/*    {theme.palette.mode === "dark" ? (*/}
-                    {/*        <DarkModeOutlined sx={{ fontSize: "25px"}} />*/}
-                    {/*    ) : (*/}
-                    {/*        <LightModeOutlined sx={{ fontSize: "25px"}} />*/}
-                    {/*    )}*/}
-                    {/*</IconButton>*/}
+                <Box>
                     <IconButton>
-                        <SettingsOutlined sx={{ fontSize: "25px"}} />
+                        <HelpOutlineOutlined sx={{ fontSize: "25px" }} />
                     </IconButton>
-                </FlexBetween>
-            </Toolbar>
+                    <IconButton>
+                        <SettingsOutlined sx={{ fontSize: "25px" }} />
+                    </IconButton>
+                </Box>
+            </Box>
         </AppBar>
-    )
-}
+    );
+};
 
-export default Navbar
+export default Navbar;
