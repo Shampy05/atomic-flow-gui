@@ -1,16 +1,7 @@
 import React from 'react';
 import {
     Box,
-    Divider,
-    Drawer,
     Grid,
-    IconButton,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Typography,
     useTheme
 } from "@mui/material";
 import {
@@ -29,12 +20,35 @@ import {
     UpwardTriangleFilled,
     CircleFilled
 } from "./SVGComponents";
+import { useDrag } from "react-dnd";
+
+const DraggableSVG = ({ SVGComponent, id, setDraggedId }) => {
+    const [{ isDragging }, drag] = useDrag(() => ({
+        type: "svg",
+        item: () => {
+            setDraggedId(id);
+            return { id };
+        },
+        collect: (monitor) => ({
+            isDragging: !!monitor.isDragging(),
+        }),
+    }));
+
+    return (
+        <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
+            <SVGComponent />
+        </div>
+    );
+};
+
+
 
 const Sidebar = ({
     drawerWidth,
     isSidebarOpen,
     setIsSidebarOpen,
-    isNonMobile
+    isNonMobile,
+    setDraggedId
                  }) => {
     const { pathname } = useLocation()
     const navigate = useNavigate()
@@ -66,25 +80,25 @@ const Sidebar = ({
                         {/* Order items inside sidebar such that they are on a grid */}
                         <Grid container spacing={2}>
                             <Grid item xs={6}>
-                                <UpwardTriangle />
+                                <DraggableSVG SVGComponent={UpwardTriangle} id="upwardTriangle" setDraggedId={setDraggedId} />
                             </Grid>
                             <Grid item xs={6}>
-                                <DownwardTriangle />
+                                <DraggableSVG SVGComponent={DownwardTriangle} id="downwardTriangle" setDraggedId={setDraggedId} />
                             </Grid>
                             <Grid item xs={6}>
-                                <UpwardCurvedLine />
+                                <DraggableSVG SVGComponent={UpwardCurvedLine} id="upwardCurvedLine" setDraggedId={setDraggedId} />
                             </Grid>
                             <Grid item xs={6}>
-                                <DownwardCurvedLine />
+                                <DraggableSVG SVGComponent={DownwardCurvedLine} id="downwardCurvedLine" setDraggedId={setDraggedId} />
                             </Grid>
                             <Grid item xs={6}>
-                                <DownwardTriangleFilled />
+                                <DraggableSVG SVGComponent={DownwardTriangleFilled} id="downwardTriangleFilled" setDraggedId={setDraggedId} />
                             </Grid>
                             <Grid item xs={6}>
-                                <UpwardTriangleFilled />
+                                <DraggableSVG SVGComponent={UpwardTriangleFilled} id="upwardTriangleFilled" setDraggedId={setDraggedId} />
                             </Grid>
                             <Grid item xs={6}>
-                                <CircleFilled />
+                                <DraggableSVG SVGComponent={CircleFilled} id="circleFilled" setDraggedId={setDraggedId} />
                             </Grid>
                         </Grid>
                     </Box>

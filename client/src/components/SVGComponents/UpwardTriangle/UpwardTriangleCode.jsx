@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from "@mui/material";
-import { ReactComponent as UpwardTriangle } from "./UpwardTriangle.svg";
+import { ReactComponent as UpwardTriangle } from "./UpwardTriangleSVG.svg";
 
 const UpwardTriangleCode = () => {
     return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from "@mui/material";
-import { ReactComponent as DownwardTriangleFilled } from "./DownwardTriangleFilled.svg";
+import { ReactComponent as DownwardTriangleFilled } from "./DownwardTriangleFilledSVG.svg";
 
 const DownwardTriangleFilledCode = () => {
     return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from "@mui/material";
-import { ReactComponent as UpwardCurvedLine } from "./UpwardCurvedLine.svg";
+import { ReactComponent as UpwardCurvedLine } from "./UpwardCurvedLineSVG.svg";
 
 const UpwardCurvedLineCode = () => {
     return (
