@@ -49,7 +49,7 @@ const Canvas = ({ addSVG, SVGs }) => { // Accept SVGs as a prop
             {SVGs.map((SVG, index) => {
                 console.log("blah", SVG.component); // Add this line
                 return (
-                    <div style={{ position: 'absolute', left: SVG.position.x, top: SVG.position.y }} key={`${SVG.id}-${index}`}>
+                    <div style={{ position: 'absolute', left: SVG.position.x, top: SVG.position.y, width: '7rem' }} key={`${SVG.id}-${index}`}>
                         {<SVG.component />}
                     </div>
                 );
