@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom"
 import { useSelector } from "react-redux";
 import Navbar from "components/Navbar";
 import Sidebar from "components/Sidebar";
+import RightButtons from "../../components/RightButtons";
 import Canvas from "../canvas";
 import {
     UpwardTriangle,
@@ -32,6 +33,20 @@ const Layout = () => {
     const [SVGs, setSVGs] = useState([]);
     const [draggedId, setDraggedId] = useState(null);
 
+    const handleSnapToGrid = () => {
+        console.log("Snap to Grid")
+    }
+
+    const handleZoomIn = () => {
+        console.log("Zoom In");
+        // Logic for zooming in goes here
+    }
+
+    const handleZoomOut = () => {
+        console.log("Zoom Out");
+        // Logic for zooming out goes here
+    }
+
     const addSVG = (i, position) => {
         console.log("SVGComponents:", SVGComponents);
         console.log("SVGComponents[i]:", SVGComponents[i]);
@@ -58,6 +73,11 @@ const Layout = () => {
                 isSidebarOpen={isSidebarOpen}
                 setIsSidebarOpen={setIsSidebarOpen}
                 setDraggedId={setDraggedId}
+            />
+            <RightButtons
+                onSnapToGrid={handleSnapToGrid}
+                onZoomIn={handleZoomIn}
+                onZoomOut={handleZoomOut}
             />
             <Box>
                 <Navbar

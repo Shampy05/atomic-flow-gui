@@ -42,6 +42,7 @@ const Canvas = ({ addSVG, SVGs }) => { // Accept SVGs as a prop
                 zIndex: '0',
                 display: 'flex',
                 justifyContent: 'center',
+                background: "pink"
 
             }}
         >
@@ -49,7 +50,7 @@ const Canvas = ({ addSVG, SVGs }) => { // Accept SVGs as a prop
                 console.log("blah", SVG.component); // Add this line
                 return (
                     <div style={{ position: 'absolute', left: SVG.position.x, top: SVG.position.y }} key={`${SVG.id}-${index}`}>
-                        {<SVG.component />}  // Here we're calling the function
+                        {<SVG.component />}
                     </div>
                 );
             })}
