@@ -21,27 +21,7 @@ import {
     CircleFilled
 } from "./SVGComponents";
 import { useDrag } from "react-dnd";
-
-const DraggableSVG = ({ SVGComponent, id, setDraggedId }) => {
-    const [{ isDragging }, drag] = useDrag(() => ({
-        type: "svg",
-        item: () => {
-            setDraggedId(id);
-            return { id };
-        },
-        collect: (monitor) => ({
-            isDragging: !!monitor.isDragging(),
-        }),
-    }));
-
-    return (
-        <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
-            <SVGComponent />
-        </div>
-    );
-};
-
-
+import DraggableSVG from "./DraggableSVG";
 
 const Sidebar = ({
     drawerWidth,
@@ -50,12 +30,11 @@ const Sidebar = ({
     isNonMobile,
     setDraggedId
                  }) => {
-    const { pathname } = useLocation()
-    const navigate = useNavigate()
-    const [activeRoute, setActiveRoute] = useState("")
     const theme = useTheme()
     return (
-        <Box component="nav">
+        <Box
+            component="nav"
+        >
             <CenteredBox
                 position="fixed"
                 top={0} // Position from top
