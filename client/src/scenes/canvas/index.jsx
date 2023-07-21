@@ -1,11 +1,27 @@
 import React, {useRef} from 'react';
 import { Box } from "@mui/material";
-import { useDrop } from "react-dnd";
+import {useDrag, useDrop} from "react-dnd";
 import {UpwardTriangle} from "../../components/SVGComponents";
 
+const DraggableSVGOnCanvas = ({ SVG, setSVGs }) => {
+    const [{ isDragging }, drag] = useDrag(() => ({
+        type: "svg",
+        item: () => {
+            return { id: SVG.id, onCanvas: true };
+        },
+        collect: (monitor) => ({
+            isDragging: !!monitor.isDragging(),
+        }),
+    }));
 
+    return (
+        <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1, position: "absolute", left: SVG.position.x, top: SVG.position.y, width: "7rem" }}>
+            <SVG.component />
+        </div>
+    );
+};
 
-const Canvas = ({ addSVG, SVGs }) => { // Accept SVGs as a prop
+const Canvas = ({ addSVG, SVGs, setSVGs, movingSVG, setMovingSVG }) => { // Accept SVGs as a prop
 
     const [, drop] = useDrop(() => ({
         accept: "svg",
@@ -21,9 +37,15 @@ const Canvas = ({ addSVG, SVGs }) => { // Accept SVGs as a prop
                 y: dropOffset.y - canvasOffset.y
             }
 
-            console.log(position)
-
-            addSVG(item.id, position);
+            if (item.onCanvas) {
+                // Update existing SVG
+                setSVGs(prev => prev.map(svg =>
+                    svg.id === item.id ? {...svg, position: position} : svg
+                ));
+            } else {
+                // Add new SVG
+                addSVG(item.id, position);
+            }
         },
     }));
 
@@ -46,14 +68,13 @@ const Canvas = ({ addSVG, SVGs }) => { // Accept SVGs as a prop
 
             }}
         >
-            {SVGs.map((SVG, index) => {
-                console.log("blah", SVG.component); // Add this line
-                return (
-                    <div style={{ position: 'absolute', left: SVG.position.x, top: SVG.position.y, width: '7rem' }} key={`${SVG.id}-${index}`}>
-                        {<SVG.component />}
-                    </div>
-                );
-            })}
+            {SVGs.map((SVG, index) => (
+                <DraggableSVGOnCanvas
+                    SVG={SVG}
+                    setSVGs={setSVGs}
+                    key={`${SVG.id}-${index}`}
+                />
+            ))}
 
         </Box>
     );

@@ -27,6 +27,8 @@ const SVGComponents = {
 }
 
 const Layout = () => {
+    const [movingSVG, setMovingSVG] = useState(null);
+
     // console.log(UpwardTriangle, DownwardTriangle, UpwardCurvedLine, DownwardCurvedLine, DownwardTriangleFilled, UpwardTriangleFilled, CircleFilled);
     const isNonMobile = useMediaQuery("(min-width: 600px)")
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -65,7 +67,13 @@ const Layout = () => {
     return (
         <Box display={isNonMobile ? "flex" : "block"} width="100%" height="100%" position="relative">
             <Box position="absolute" width="100%" height="100%" zIndex="0">
-                <Canvas addSVG={addSVG} SVGs={SVGs} /> {/* Pass SVGs as a prop */}
+                <Canvas
+                    addSVG={addSVG}
+                    SVGs={SVGs}
+                    setSVGs={setSVGs}
+                    movingSVG={movingSVG}
+                    setMovingSVG={setMovingSVG}
+                /> {/* Pass SVGs as a prop */}
             </Box>
             <Sidebar
                 isNonMobile={isNonMobile}
@@ -73,6 +81,7 @@ const Layout = () => {
                 isSidebarOpen={isSidebarOpen}
                 setIsSidebarOpen={setIsSidebarOpen}
                 setDraggedId={setDraggedId}
+                setMovingSVG={setMovingSVG}
             />
             <RightButtons
                 onSnapToGrid={handleSnapToGrid}

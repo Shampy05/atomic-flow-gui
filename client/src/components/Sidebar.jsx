@@ -28,7 +28,8 @@ const Sidebar = ({
     isSidebarOpen,
     setIsSidebarOpen,
     isNonMobile,
-    setDraggedId
+    setDraggedId,
+    setMovingSVG
                  }) => {
     const theme = useTheme()
     return (
@@ -59,25 +60,25 @@ const Sidebar = ({
                         {/* Order items inside sidebar such that they are on a grid */}
                         <Grid container spacing={2}>
                             <Grid item xs={6}>
-                                <DraggableSVG SVGComponent={UpwardTriangle} id="upwardTriangle" setDraggedId={setDraggedId} />
+                                <DraggableSVG SVGComponent={UpwardTriangle} id="upwardTriangle" setDraggedId={setDraggedId} setMovingSVG={setMovingSVG}/>
                             </Grid>
                             <Grid item xs={6}>
-                                <DraggableSVG SVGComponent={DownwardTriangle} id="downwardTriangle" setDraggedId={setDraggedId} />
+                                <DraggableSVG SVGComponent={DownwardTriangle} id="downwardTriangle" setDraggedId={setDraggedId} setMovingSVG={setMovingSVG}/>
                             </Grid>
                             <Grid item xs={6}>
-                                <DraggableSVG SVGComponent={UpwardCurvedLine} id="upwardCurvedLine" setDraggedId={setDraggedId} />
+                                <DraggableSVG SVGComponent={UpwardCurvedLine} id="upwardCurvedLine" setDraggedId={setDraggedId} setMovingSVG={setMovingSVG}/>
                             </Grid>
                             <Grid item xs={6}>
-                                <DraggableSVG SVGComponent={DownwardCurvedLine} id="downwardCurvedLine" setDraggedId={setDraggedId} />
+                                <DraggableSVG SVGComponent={DownwardCurvedLine} id="downwardCurvedLine" setDraggedId={setDraggedId} setMovingSVG={setMovingSVG}/>
                             </Grid>
                             <Grid item xs={6}>
-                                <DraggableSVG SVGComponent={DownwardTriangleFilled} id="downwardTriangleFilled" setDraggedId={setDraggedId} />
+                                <DraggableSVG SVGComponent={DownwardTriangleFilled} id="downwardTriangleFilled" setDraggedId={setDraggedId} setMovingSVG={setMovingSVG}/>
                             </Grid>
                             <Grid item xs={6}>
-                                <DraggableSVG SVGComponent={UpwardTriangleFilled} id="upwardTriangleFilled" setDraggedId={setDraggedId} />
+                                <DraggableSVG SVGComponent={UpwardTriangleFilled} id="upwardTriangleFilled" setDraggedId={setDraggedId} setMovingSVG={setMovingSVG}/>
                             </Grid>
                             <Grid item xs={6}>
-                                <DraggableSVG SVGComponent={CircleFilled} id="circleFilled" setDraggedId={setDraggedId} />
+                                <DraggableSVG SVGComponent={CircleFilled} id="circleFilled" setDraggedId={setDraggedId} setMovingSVG={setMovingSVG}/>
                             </Grid>
                         </Grid>
                     </Box>
