@@ -1,11 +1,12 @@
 import React,{ useState } from 'react';
 import { Box, useMediaQuery } from "@mui/material";
 import { Outlet } from "react-router-dom"
-import { useSelector } from "react-redux";
 import Navbar from "components/Navbar";
 import Sidebar from "components/Sidebar";
 import RightButtons from "../../components/RightButtons";
 import Canvas from "../canvas";
+import { v4 as uuidv4 } from "uuid";
+
 import {
     UpwardTriangle,
     DownwardTriangle,
@@ -28,12 +29,11 @@ const SVGComponents = {
 
 const Layout = () => {
     const [movingSVG, setMovingSVG] = useState(null);
-
-    // console.log(UpwardTriangle, DownwardTriangle, UpwardCurvedLine, DownwardCurvedLine, DownwardTriangleFilled, UpwardTriangleFilled, CircleFilled);
     const isNonMobile = useMediaQuery("(min-width: 600px)")
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
     const [SVGs, setSVGs] = useState([]);
     const [draggedId, setDraggedId] = useState(null);
+    const [count, setCount] = useState(0);
 
     const handleSnapToGrid = () => {
         console.log("Snap to Grid")
@@ -50,33 +50,41 @@ const Layout = () => {
     }
 
     const addSVG = (i, position) => {
-        console.log("SVGComponents:", SVGComponents);
-        console.log("SVGComponents[i]:", SVGComponents[i]);
-        console.log("id:", i);
-
         const newSVG = {
-            id: i,
+            id: uuidv4(),
             position: position,
             component: SVGComponents[i] // Here we're storing the component, not the called function
         };
 
-        console.log("newSVG:", newSVG);
         setSVGs((SVGs) => [...SVGs, newSVG]);
+        setCount(count + 1);
     };
 
     return (
-        <Box display={isNonMobile ? "flex" : "block"} width="100%" height="100%" position="relative">
-            <Box position="absolute" width="100%" height="100%" zIndex="0">
+        <Box
+            display =
+                {isNonMobile
+                ? "flex"
+                : "block"}
+            width="100%"
+            height="100%"
+            position="relative"
+        >
+            <Box
+                position="absolute"
+                width="100%"
+                height="100%"
+                zIndex="0"
+            >
                 <Canvas
                     addSVG={addSVG}
                     SVGs={SVGs}
                     setSVGs={setSVGs}
                     movingSVG={movingSVG}
                     setMovingSVG={setMovingSVG}
-                /> {/* Pass SVGs as a prop */}
+                />
             </Box>
             <Sidebar
-                isNonMobile={isNonMobile}
                 drawerWidth="250px"
                 isSidebarOpen={isSidebarOpen}
                 setIsSidebarOpen={setIsSidebarOpen}

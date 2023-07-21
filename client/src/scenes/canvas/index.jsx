@@ -1,49 +1,65 @@
 import React, {useRef} from 'react';
 import { Box } from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
-import {UpwardTriangle} from "../../components/SVGComponents";
 
-const DraggableSVGOnCanvas = ({ SVG, setSVGs }) => {
+const DraggableSVGOnCanvas = ({ SVG }) => {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: "svg",
         item: () => {
-            return { id: SVG.id, onCanvas: true };
+            console.log("Id: ", SVG.id);
+            return {
+                id: SVG.id,
+                onCanvas: true
+            };
         },
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
     }));
-
     return (
-        <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1, position: "absolute", left: SVG.position.x, top: SVG.position.y, width: "7rem" }}>
+        <div
+            ref={drag}
+            style=
+                {{
+                    opacity:
+                        isDragging
+                            ? 0.5
+                            : 1,
+                    position: "absolute",
+                    left: SVG.position.x,
+                    top: SVG.position.y,
+                    width: "7rem"
+                }}
+        >
             <SVG.component />
         </div>
     );
 };
 
-const Canvas = ({ addSVG, SVGs, setSVGs, movingSVG, setMovingSVG }) => { // Accept SVGs as a prop
-
+const Canvas =
+    ({
+                    addSVG,
+                    SVGs,
+                    setSVGs,
+    }) => {
     const [, drop] = useDrop(() => ({
         accept: "svg",
         drop: (item, monitor) => {
             const dropOffset = monitor.getSourceClientOffset();
-
-            // Get the canvas element offset
             const canvasOffset = canvasRef.current.getBoundingClientRect();
 
-            // Calculate the position relative to the canvas
             const position = {
                 x: dropOffset.x - canvasOffset.x,
                 y: dropOffset.y - canvasOffset.y
             }
 
             if (item.onCanvas) {
-                // Update existing SVG
                 setSVGs(prev => prev.map(svg =>
-                    svg.id === item.id ? {...svg, position: position} : svg
+                    svg.id === item.id
+                        ? {...svg, position: position}
+                        : svg
                 ));
             } else {
-                // Add new SVG
                 addSVG(item.id, position);
             }
         },
@@ -65,13 +81,11 @@ const Canvas = ({ addSVG, SVGs, setSVGs, movingSVG, setMovingSVG }) => { // Acce
                 display: 'flex',
                 justifyContent: 'center',
                 background: "pink"
-
             }}
         >
             {SVGs.map((SVG, index) => (
                 <DraggableSVGOnCanvas
                     SVG={SVG}
-                    setSVGs={setSVGs}
                     key={`${SVG.id}-${index}`}
                 />
             ))}
