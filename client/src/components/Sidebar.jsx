@@ -21,7 +21,8 @@ const Sidebar = ({
     isSidebarOpen,
     setIsSidebarOpen,
     setDraggedId,
-    setMovingSVG
+    setMovingSVG,
+    movingSVG
                  }) => {
     const theme = useTheme()
     return (
@@ -56,6 +57,7 @@ const Sidebar = ({
                                     id="upwardTriangle"
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    movingSVG={movingSVG}
                                 />
                             </Grid>
                             <Grid item xs={6}>
@@ -64,6 +66,7 @@ const Sidebar = ({
                                     id="downwardTriangle"
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    movingSVG={movingSVG}
                                 />
                             </Grid>
                             <Grid item xs={6}>
@@ -72,6 +75,7 @@ const Sidebar = ({
                                     id="upwardCurvedLine"
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    movingSVG={movingSVG}
                                 />
                             </Grid>
                             <Grid item xs={6}>
@@ -80,6 +84,7 @@ const Sidebar = ({
                                     id="downwardCurvedLine"
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    movingSVG={movingSVG}
                                 />
                             </Grid>
                             <Grid item xs={6}>
@@ -88,6 +93,7 @@ const Sidebar = ({
                                     id="downwardTriangleFilled"
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    movingSVG={movingSVG}
                                 />
                             </Grid>
                             <Grid item xs={6}>
@@ -96,6 +102,7 @@ const Sidebar = ({
                                     id="upwardTriangleFilled"
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    movingSVG={movingSVG}
                                 />
                             </Grid>
                             <Grid item xs={6}>
@@ -104,6 +111,7 @@ const Sidebar = ({
                                     id="circleFilled"
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    movingSVG={movingSVG}
                                 />
                             </Grid>
                         </Grid>

@@ -1,15 +1,10 @@
 import React, { useState } from "react";
 import {
-    LightModeOutlined,
-    DarkModeOutlined,
     Menu as MenuIcon,
     SettingsOutlined,
-    ArrowDropDownOutlined,
     HelpOutlineOutlined,
 } from "@mui/icons-material";
-import FlexBetween from "components/FlexBetween";
 import { useDispatch } from "react-redux";
-import { setMode } from "state";
 import { AppBar, IconButton, Box, useTheme } from "@mui/material";
 
 const Navbar = ({ isSidebarOpen, setIsSidebarOpen }) => {

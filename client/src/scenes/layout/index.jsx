@@ -34,6 +34,8 @@ const Layout = () => {
     const [SVGs, setSVGs] = useState([]);
     const [draggedId, setDraggedId] = useState(null);
     const [count, setCount] = useState(0);
+    const [selectedSVG, setSelectedSVG] = useState(null);
+
 
     const handleSnapToGrid = () => {
         console.log("Snap to Grid")
@@ -53,7 +55,8 @@ const Layout = () => {
         const newSVG = {
             id: uuidv4(),
             position: position,
-            component: SVGComponents[i] // Here we're storing the component, not the called function
+            component: SVGComponents[i],
+            isSelected: false
         };
 
         setSVGs((SVGs) => [...SVGs, newSVG]);
@@ -82,6 +85,8 @@ const Layout = () => {
                     setSVGs={setSVGs}
                     movingSVG={movingSVG}
                     setMovingSVG={setMovingSVG}
+                    setSelectedSVG={setSelectedSVG}
+                    selectedSVG={selectedSVG}
                 />
             </Box>
             <Sidebar

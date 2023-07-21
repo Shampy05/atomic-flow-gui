@@ -2,11 +2,12 @@ import React, {useRef} from 'react';
 import { Box } from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
 
-const DraggableSVGOnCanvas = ({ SVG }) => {
+const DraggableSVGOnCanvas = ({ SVG, setSelectedSVG, selectedSVG }) => {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: "svg",
         item: () => {
             console.log("Id: ", SVG.id);
+            setSelectedSVG(SVG.id);
             return {
                 id: SVG.id,
                 onCanvas: true
@@ -16,22 +17,33 @@ const DraggableSVGOnCanvas = ({ SVG }) => {
             isDragging: !!monitor.isDragging(),
         }),
     }));
+
+    const handleClick = (e) => {
+        e.stopPropagation(); // Prevent event from bubbling up to Canvas
+        setSelectedSVG(SVG.id); // Set the selected SVG to this SVG
+    };
+
     return (
         <div
             ref={drag}
+            onClick={handleClick} // Add onClick event here
             style=
                 {{
-                    opacity:
-                        isDragging
-                            ? 0.5
-                            : 1,
                     position: "absolute",
                     left: SVG.position.x,
                     top: SVG.position.y,
-                    width: "7rem"
                 }}
         >
-            <SVG.component />
+            <div style=
+                     {{
+                         opacity: isDragging ? 0.5 : 1,
+                         width: "7rem",
+                         border: SVG.id === selectedSVG ? '2px solid rgba(0, 0, 255, 0.5)' : 'none', // Show border if SVG is selected
+                         boxShadow: SVG.id === selectedSVG ? '0px 0px 10px 2px rgba(0,0,255,0.5)' : 'none' // Add boxShadow for a more modern look
+                     }}
+            >
+                <SVG.component />
+            </div>
         </div>
     );
 };
@@ -41,6 +53,10 @@ const Canvas =
                     addSVG,
                     SVGs,
                     setSVGs,
+                    movingSVG,
+                    setMovingSVG,
+                    setSelectedSVG,
+                    selectedSVG
     }) => {
     const [, drop] = useDrop(() => ({
         accept: "svg",
@@ -56,8 +72,8 @@ const Canvas =
             if (item.onCanvas) {
                 setSVGs(prev => prev.map(svg =>
                     svg.id === item.id
-                        ? {...svg, position: position}
-                        : svg
+                        ? {...svg, position: position, isSelected: true}
+                        : {...svg, isSelected: false}
                 ));
             } else {
                 addSVG(item.id, position);
@@ -71,6 +87,7 @@ const Canvas =
     return (
         <Box
             ref={canvasRef}
+            onClick={() => setSelectedSVG(null)}
             sx={{
                 position: 'absolute',
                 top: 0,
@@ -86,6 +103,8 @@ const Canvas =
             {SVGs.map((SVG, index) => (
                 <DraggableSVGOnCanvas
                     SVG={SVG}
+                    setSelectedSVG={setSelectedSVG}
+                    selectedSVG={selectedSVG}
                     key={`${SVG.id}-${index}`}
                 />
             ))}
