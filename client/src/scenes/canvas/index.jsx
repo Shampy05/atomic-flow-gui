@@ -1,6 +1,7 @@
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import { Box } from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
+import * as d3 from "d3";
 
 const DraggableSVGOnCanvas = ({ SVG }) => {
     const [{ isDragging }, drag] = useDrag(() => ({
@@ -28,7 +29,8 @@ const DraggableSVGOnCanvas = ({ SVG }) => {
                     position: "absolute",
                     left: SVG.position.x,
                     top: SVG.position.y,
-                    width: "7rem"
+                    width: "7rem",
+                    zIndex: 1
                 }}
         >
             <SVG.component />
@@ -42,6 +44,10 @@ const Canvas =
                     SVGs,
                     setSVGs,
     }) => {
+    const svgRef = useRef();
+    const [lines, setLines] = useState([]);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [startPosition, setStartPosition] = useState({x: 0, y: 0});
     const [, drop] = useDrop(() => ({
         accept: "svg",
         drop: (item, monitor) => {
@@ -64,6 +70,45 @@ const Canvas =
             }
         },
     }));
+
+    const handleMouseDown = (event) => {
+        setIsDrawing(true);
+        const point = d3.pointer(event);
+        setStartPosition({x: point[0], y: point[1]});
+        setLines(prev => [
+            ...prev,
+            {
+                start: {x: point[0], y: point[1]},
+                end: {x: point[0], y: point[1]}
+            }]);
+    }
+
+    const handleMouseMove = (event) => {
+        if (!isDrawing) return;
+        const point = d3.pointer(event);
+
+        setLines(prev => {
+            const lines = [...prev];
+            const lastLineIndex = lines.length - 1;
+            if (lastLineIndex >= 0) {
+                lines[lastLineIndex] = {
+                    start: startPosition,
+                    end: {x: point[0], y: point[1]}
+                };
+            } else {
+                lines.push({
+                    start: startPosition,
+                    end: {x: point[0], y: point[1]}
+                });
+            }
+
+            return lines;
+        });
+    }
+
+    const handleMouseUp = (event) => {
+        setIsDrawing(false);
+    }
 
     const canvasRef = useRef(null);
     drop(canvasRef)
@@ -89,7 +134,25 @@ const Canvas =
                     key={`${SVG.id}-${index}`}
                 />
             ))}
-
+            <svg
+                ref={svgRef}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+            >
+                {lines.map((line, index) => (
+                    <line
+                        key={index}
+                        x1={line.start.x}
+                        y1={line.start.y}
+                        x2={line.end.x}
+                        y2={line.end.y}
+                        stroke="black"
+                        strokeWidth={2}
+                    />
+                ))}
+            </svg>
         </Box>
     );
 }
