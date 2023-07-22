@@ -1,13 +1,15 @@
-import React from 'react';
-import { Box } from "@mui/material";
-import { ReactComponent as DownwardTriangleFilled } from "./DownwardTriangleFilledSVG.svg";
+import SVGShape from "../SvgShape";
 
-const DownwardTriangleFilledCode = () => {
-    return (
-        <Box>
-            <DownwardTriangleFilled />
-        </Box>
-    );
-}
+const DownwardTriangleFilledCode = () => (
+    <SVGShape
+        shape="polygon"
+        attributes={{
+            points: "25,45 45,10 5,10",
+            fill: "black",
+            stroke: "black",
+            strokeWidth: 1,
+        }}
+    />
+)
 
 export default DownwardTriangleFilledCode;

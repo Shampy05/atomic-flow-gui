@@ -1,14 +1,15 @@
-import React from "react";
-import { Box } from "@mui/material";
-import { ReactComponent as UpwardTriangleFilled } from "./UpwardTriangleFilledSVG.svg";
+import SVGShape from "../SvgShape";
 
-const UpwardTriangleFilledCode = () => {
-    return (
-        <Box>
-            <UpwardTriangleFilled />
-        </Box>
-    );
-}
+const UpwardTriangleFilledCode = () => (
+    <SVGShape
+        shape="polygon"
+        attributes={{
+            points: "25,5 45,40 5,40",
+            fill: "black",
+            stroke: "black",
+            strokeWidth: 1,
+        }}
+    />
+);
 
 export default UpwardTriangleFilledCode;
-

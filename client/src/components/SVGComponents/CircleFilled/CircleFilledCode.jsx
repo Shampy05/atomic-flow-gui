@@ -1,13 +1,17 @@
-import React from "react";
-import { Box } from "@mui/material";
-import { ReactComponent as CircleFilled } from "./CircleFilledSVG.svg";
+import SVGShape from "../SvgShape";
 
-const CircleFilledCode = () => {
-    return (
-        <Box>
-            <CircleFilled />
-        </Box>
-    );
-}
+const CircleFilledCode = () => (
+    <SVGShape
+        shape="circle"
+        attributes={{
+            cx: 25,
+            cy: 25,
+            r: 20,
+            fill: "black",
+            stroke: "black",
+            strokeWidth: 1,
+        }}
+    />
+)
 
 export default CircleFilledCode;

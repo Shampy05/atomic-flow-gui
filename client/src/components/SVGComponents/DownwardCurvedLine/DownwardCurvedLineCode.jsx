@@ -1,13 +1,15 @@
-import React from 'react';
-import { Box } from "@mui/material";
-import { ReactComponent as DownwardCurvedLine } from "./DownwardCurvedLineSVG.svg";
+import SVGShape from "../SvgShape";
 
-const DownwardCurvedLineCode = () => {
-    return (
-        <Box>
-            <DownwardCurvedLine />
-        </Box>
-    );
-}
+const DownwardCurvedLineCode = () => (
+    <SVGShape
+        shape="path"
+        attributes={{
+            d: "M 10 20 Q 25 25 40 20",
+            fill: "none",
+            stroke: "black",
+            strokeWidth: 1,
+        }}
+    />
+)
 
 export default DownwardCurvedLineCode;

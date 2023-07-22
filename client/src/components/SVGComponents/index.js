@@ -1,16 +1,16 @@
-import { ReactComponent as UpwardTriangleSVG } from "./UpwardTriangle/UpwardTriangleSVG.svg"
-import { ReactComponent as DownwardTriangleSVG } from "./DownwardTriangle/DownwardTriangleSVG.svg"
-import { ReactComponent as UpwardCurvedLineSVG } from "./UpwardCurvedLine/UpwardCurvedLineSVG.svg"
-import { ReactComponent as DownwardCurvedLineSVG } from "./DownwardCurvedLine/DownwardCurvedLineSVG.svg"
-import { ReactComponent as DownwardTriangleFilledSVG } from "./DownwardTriangleFilled/DownwardTriangleFilledSVG.svg"
-import { ReactComponent as UpwardTriangleFilledSVG } from "./UpwardTriangleFilled/UpwardTriangleFilledSVG.svg"
-import { ReactComponent as CircleFilledSVG } from "./CircleFilled/CircleFilledSVG.svg"
+import UpwardTriangleCode from "./UpwardTriangle/UpwardTriangleCode";
+import DownwardTriangleCode from "./DownwardTriangle/DownwardTriangleCode";
+import UpwardCurvedLineCode from "./UpwardCurvedLine/UpwardCurvedLineCode";
+import DownwardCurvedLineCode from "./DownwardCurvedLine/DownwardCurvedLineCode";
+import DownwardTriangleFilledCode from "./DownwardTriangleFilled/DownwardTriangleFilledCode";
+import UpwardTriangleFilledCode from "./UpwardTriangleFilled/UpwardTriangleFilledCode";
+import CircleFilledCode from "./CircleFilled/CircleFilledCode";
 
 
-export const UpwardTriangle = () => <UpwardTriangleSVG />;
-export const DownwardTriangle = () => <DownwardTriangleSVG />;
-export const UpwardCurvedLine = () => <UpwardCurvedLineSVG />;
-export const DownwardCurvedLine = () => <DownwardCurvedLineSVG />;
-export const DownwardTriangleFilled = () => <DownwardTriangleFilledSVG />;
-export const UpwardTriangleFilled = () => <UpwardTriangleFilledSVG />;
-export const CircleFilled = () => <CircleFilledSVG />;
+export const UpwardTriangle = UpwardTriangleCode
+export const DownwardTriangle = DownwardTriangleCode
+export const UpwardCurvedLine = UpwardCurvedLineCode
+export const DownwardCurvedLine = DownwardCurvedLineCode
+export const DownwardTriangleFilled = DownwardTriangleFilledCode
+export const UpwardTriangleFilled = UpwardTriangleFilledCode
+export const CircleFilled = CircleFilledCode

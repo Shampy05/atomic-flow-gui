@@ -1,13 +1,15 @@
-import React from 'react';
-import { Box } from "@mui/material";
-import { ReactComponent as UpwardCurvedLine } from "./UpwardCurvedLineSVG.svg";
+import SVGShape from "../SvgShape";
 
-const UpwardCurvedLineCode = () => {
-    return (
-        <Box>
-            <UpwardCurvedLine />
-        </Box>
-    );
-}
+const UpwardCurvedLineCode = () => (
+    <SVGShape
+        shape="path"
+        attributes={{
+            d: "M 10 30 Q 25 25 40 30",
+            fill: "none",
+            stroke: "black",
+            strokeWidth: 1,
+        }}
+    />
+)
 
 export default UpwardCurvedLineCode;
