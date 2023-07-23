@@ -1,8 +1,9 @@
 import SVGShape from "../SvgShape";
 
-const UpwardCurvedLineCode = () => (
+const UpwardCurvedLineCode = ({ selected }) => (
     <SVGShape
         shape="path"
+        selected={selected}
         attributes={{
             d: "M 10 30 Q 25 25 40 30",
             fill: "none",

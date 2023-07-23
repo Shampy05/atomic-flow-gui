@@ -1,8 +1,9 @@
 import SVGShape from "../SvgShape";
 
-const CircleFilledCode = () => (
+const CircleFilledCode = ({ selected }) => (
     <SVGShape
         shape="circle"
+        selected={selected}
         attributes={{
             cx: 25,
             cy: 25,

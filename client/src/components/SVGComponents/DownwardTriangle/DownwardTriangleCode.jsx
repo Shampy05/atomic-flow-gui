@@ -1,8 +1,9 @@
 import SVGShape from "../SvgShape";
 
-const DownwardTriangleCode = () => (
+const DownwardTriangleCode = ({ selected }) => (
     <SVGShape
         shape="polygon"
+        selected={selected}
         attributes={{
             points: "25,45 45,10 5,10",
             fill: "none",
