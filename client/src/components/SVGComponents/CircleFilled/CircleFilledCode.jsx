@@ -1,9 +1,14 @@
 import SVGShape from "../SvgShape";
 
-const CircleFilledCode = ({ selected }) => (
+const CircleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => (
     <SVGShape
         shape="circle"
         selected={selected}
+        setLines={setLines}
+        setIsDrawing={setIsDrawing}
+        setStartPosition={setStartPosition}
+        setIsNodeClicked={setIsNodeClicked}
+        svgPosition={svgPosition}
         attributes={{
             cx: 25,
             cy: 25,

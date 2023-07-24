@@ -3,8 +3,9 @@ import { Box } from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
 import * as d3 from "d3";
 
-const DraggableSVGOnCanvas = ({ SVG, select, selected }) => {
-    const [{ isDragging }, drag] = useDrag(() => ({
+const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, svgPosition }) => {
+    const [isNodeClicked, setIsNodeClicked] = useState(false);
+    const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: "svg",
         item: () => {
             console.log("Id: ", SVG.id);
@@ -13,19 +14,24 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected }) => {
                 onCanvas: true
             };
         },
+        canDrag: () => !isNodeClicked,
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
         }),
-    }));
+    }), [isNodeClicked]);
 
     const handleClick = (e) => {
         e.stopPropagation(); // prevent the canvas click handler from firing
         select(SVG.id); // select this SVG when clicked
+        setIsNodeClicked(false); // update isNodeClicked state to false
     }
 
     return (
         <div
-            ref={drag}
+            ref={node => {
+                drag(node);
+                preview(node);
+            }}
             onClick={handleClick}
             style=
                 {{
@@ -40,7 +46,14 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected }) => {
                     zIndex: 1
                 }}
         >
-            <SVG.component selected={selected || isDragging}/>
+            <SVG.component
+                selected={selected || isDragging}
+                setIsDrawing={setIsDrawing}
+                setLines={setLines}
+                setStartPosition={setStartPosition}
+                setIsNodeClicked={setIsNodeClicked}
+                svgPosition={svgPosition}
+            />
         </div>
     );
 };
@@ -146,6 +159,10 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                     SVG={SVG}
                     selected={selectedSVG === SVG.id}
                     select={selectSVG}
+                    setIsDrawing={setIsDrawing}
+                    setLines={setLines}
+                    setStartPosition={setStartPosition}
+                    svgPosition={SVG.position}
                     key={`${SVG.id}-${index}`}
                 />
             ))}

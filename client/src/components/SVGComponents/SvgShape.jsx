@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 import { Box } from "@mui/material";
 
-const SVGShape = ({ shape, attributes, selected }) => {
+const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStartPosition, setIsNodeClicked, svgPosition }) => {
     const ref = useRef();
     const nodeRadius = 3; // radius of the nodes
 
@@ -18,7 +18,7 @@ const SVGShape = ({ shape, attributes, selected }) => {
 
         if (selected) {
             element.attr('stroke', '#A584A5');
-            element.attr('stroke-width', 5);
+            element.attr('stroke-width', 2);
 
             if (shape === "path") {
                 // parse points from the "d" attribute
@@ -34,7 +34,44 @@ const SVGShape = ({ shape, attributes, selected }) => {
                         .attr("cx", x)
                         .attr("cy", y)
                         .attr("r", nodeRadius)
-                        .attr("fill", "blue");
+                        .attr("fill", "blue")
+                        .on("mousedown", (event) => {
+                            event.stopPropagation();
+                            event.preventDefault(); // Prevent the default drag start event
+
+                            // Get the SVG coordinates of the mousedown event
+                            const point = d3.pointer(event);
+                            console.log("SVGShape.jsx -> point: ", point);
+
+
+                            // Translate these to screen coordinates
+                            const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
+                            console.log("SVGShape.jsx -> svgRect: ", svgRect);
+                            // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
+                            const scaleX = svgRect.width / 50;
+                            const scaleY = svgRect.height / 50;
+
+                            const adjustedPoint = {
+                                x: point[0] * scaleX + svgRect.left,
+                                y: point[1] * scaleY + svgRect.top
+                            };
+
+                            console.log("SVGShape.jsx -> adjustedPoint: ", adjustedPoint);
+
+                            setIsDrawing(true);
+                            setStartPosition(adjustedPoint);
+                            setLines(prev => [
+                                ...prev,
+                                {
+                                    start: adjustedPoint,
+                                    end: adjustedPoint
+                                }
+                            ]);
+                        })
+
+                        .on("mouseup", (event) => {
+                            setIsDrawing(false);
+                        });
                 });
             } else if (shape === "polygon") {
                 // parse points from the "points" attribute
@@ -46,11 +83,49 @@ const SVGShape = ({ shape, attributes, selected }) => {
 
                 // draw nodes
                 nodes.forEach(({x, y}) => {
+                    console.log(x, y);
                     svgElement.append("circle")
                         .attr("cx", x)
                         .attr("cy", y)
                         .attr("r", nodeRadius)
-                        .attr("fill", "blue");
+                        .attr("fill", "blue")
+                        .on("mousedown", (event) => {
+                            event.stopPropagation();
+                            event.preventDefault(); // Prevent the default drag start event
+
+                            // Get the SVG coordinates of the mousedown event
+                            const point = d3.pointer(event);
+                            console.log("SVGShape.jsx -> point: ", point);
+
+
+                            // Translate these to screen coordinates
+                            const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
+                            console.log("SVGShape.jsx -> svgRect: ", svgRect);
+                            // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
+                            const scaleX = svgRect.width / 50;
+                            const scaleY = svgRect.height / 50;
+
+                            const adjustedPoint = {
+                                x: point[0] * scaleX + svgRect.left,
+                                y: point[1] * scaleY + svgRect.top
+                            };
+
+                            console.log("SVGShape.jsx -> adjustedPoint: ", adjustedPoint);
+
+                            setIsDrawing(true);
+                            setStartPosition(adjustedPoint);
+                            setLines(prev => [
+                                ...prev,
+                                {
+                                    start: adjustedPoint,
+                                    end: adjustedPoint
+                                }
+                            ]);
+                        })
+
+                        .on("mouseup", (event) => {
+                            setIsDrawing(false);
+                        });
                 });
             } else if (shape === "circle") {
                 // calculate top and bottom nodes
@@ -64,7 +139,44 @@ const SVGShape = ({ shape, attributes, selected }) => {
                         .attr("cx", x)
                         .attr("cy", y)
                         .attr("r", nodeRadius)
-                        .attr("fill", "blue");
+                        .attr("fill", "blue")
+                        .on("mousedown", (event) => {
+                            event.stopPropagation();
+                            event.preventDefault(); // Prevent the default drag start event
+
+                            // Get the SVG coordinates of the mousedown event
+                            const point = d3.pointer(event);
+                            console.log("SVGShape.jsx -> point: ", point);
+
+
+                            // Translate these to screen coordinates
+                            const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
+                            console.log("SVGShape.jsx -> svgRect: ", svgRect);
+                            // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
+                            const scaleX = svgRect.width / 50;
+                            const scaleY = svgRect.height / 50;
+
+                            const adjustedPoint = {
+                                x: point[0] * scaleX + svgRect.left,
+                                y: point[1] * scaleY + svgRect.top
+                            };
+
+                            console.log("SVGShape.jsx -> adjustedPoint: ", adjustedPoint);
+
+                            setIsDrawing(true);
+                            setStartPosition(adjustedPoint);
+                            setLines(prev => [
+                                ...prev,
+                                {
+                                    start: adjustedPoint,
+                                    end: adjustedPoint
+                                }
+                            ]);
+                        })
+
+                        .on("mouseup", (event) => {
+                            setIsDrawing(false);
+                        });
                 });
             }
         }
