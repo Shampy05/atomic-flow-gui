@@ -1,8 +1,9 @@
-import SVGShape from "../SvgShape";
+import SVGShape from "./SvgShape";
 
-const DownwardCurvedLineCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => (
+const UpwardTriangleCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => (
+    console.log("UpwardTriangleCode.jsx -> svgPosition: ", svgPosition),
     <SVGShape
-        shape="path"
+        shape="polygon"
         selected={selected}
         setLines={setLines}
         setIsDrawing={setIsDrawing}
@@ -10,12 +11,11 @@ const DownwardCurvedLineCode = ({ selected, setLines, setIsDrawing, setStartPosi
         setIsNodeClicked={setIsNodeClicked}
         svgPosition={svgPosition}
         attributes={{
-            d: "M 10 20 Q 25 25 40 20",
+            points: "25,5 45,40 5,40",
             fill: "none",
             stroke: "black",
             strokeWidth: 1,
         }}
     />
 )
-
-export default DownwardCurvedLineCode;
+export default UpwardTriangleCode;

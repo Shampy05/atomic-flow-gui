@@ -1,6 +1,6 @@
-import SVGShape from "../SvgShape";
+import SVGShape from "./SvgShape";
 
-const UpwardTriangleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => (
+const DownwardTriangleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => (
     <SVGShape
         shape="polygon"
         selected={selected}
@@ -10,12 +10,12 @@ const UpwardTriangleFilledCode = ({ selected, setLines, setIsDrawing, setStartPo
         setIsNodeClicked={setIsNodeClicked}
         svgPosition={svgPosition}
         attributes={{
-            points: "25,5 45,40 5,40",
+            points: "25,45 45,10 5,10",
             fill: "black",
             stroke: "black",
             strokeWidth: 1,
         }}
     />
-);
+)
 
-export default UpwardTriangleFilledCode;
+export default DownwardTriangleFilledCode;

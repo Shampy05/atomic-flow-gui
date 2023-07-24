@@ -1,4 +1,4 @@
-import SVGShape from "../SvgShape";
+import SVGShape from "./SvgShape";
 
 const CircleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => (
     <SVGShape

@@ -1,10 +1,10 @@
-import UpwardTriangleCode from "./UpwardTriangle/UpwardTriangleCode";
-import DownwardTriangleCode from "./DownwardTriangle/DownwardTriangleCode";
-import UpwardCurvedLineCode from "./UpwardCurvedLine/UpwardCurvedLineCode";
-import DownwardCurvedLineCode from "./DownwardCurvedLine/DownwardCurvedLineCode";
-import DownwardTriangleFilledCode from "./DownwardTriangleFilled/DownwardTriangleFilledCode";
-import UpwardTriangleFilledCode from "./UpwardTriangleFilled/UpwardTriangleFilledCode";
-import CircleFilledCode from "./CircleFilled/CircleFilledCode";
+import UpwardTriangleCode from "./UpwardTriangleCode";
+import DownwardTriangleCode from "./DownwardTriangleCode";
+import UpwardCurvedLineCode from "./UpwardCurvedLineCode";
+import DownwardCurvedLineCode from "./DownwardCurvedLineCode";
+import DownwardTriangleFilledCode from "./DownwardTriangleFilledCode";
+import UpwardTriangleFilledCode from "./UpwardTriangleFilledCode";
+import CircleFilledCode from "./CircleFilledCode";
 
 
 export const UpwardTriangle = UpwardTriangleCode

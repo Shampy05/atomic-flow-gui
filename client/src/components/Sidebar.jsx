@@ -1,9 +1,6 @@
 import React from 'react';
-import {
-    Box,
-    Grid,
-    useTheme
-} from "@mui/material";
+import { Box, Grid, useTheme } from "@mui/material";
+import { styled } from "@mui/system";
 import CenteredBox from "./CenteredBox";
 import {
     UpwardTriangle,
@@ -16,96 +13,82 @@ import {
 } from "./SVGComponents";
 import DraggableSVG from "./DraggableSVG";
 
+const StyledBox = styled(Box)({
+    width: drawerWidth,
+    height: '50vh',
+    overflow: 'auto',
+    backgroundColor: theme.palette.background.alt,
+    '&:hover': {
+        backgroundColor: 'primary.main',
+        opacity: [0.9, 0.8, 0.7],
+    },
+})
+
+const SVG_CONFIGS = [
+    { component: UpwardTriangle, id: 'upwardTriangle' },
+    { component: DownwardTriangle, id: 'downwardTriangle' },
+    { component: UpwardCurvedLine, id: 'upwardCurvedLine' },
+    { component: DownwardCurvedLine, id: 'downwardCurvedLine' },
+    { component: DownwardTriangleFilled, id: 'downwardTriangleFilled' },
+    { component: UpwardTriangleFilled, id: 'upwardTriangleFilled' },
+    { component: CircleFilled, id: 'circleFilled' },
+];
+
+const DraggableSVGItem = ({ SVGComponent, id, setDraggedId, setMovingSVG }) => (
+    <Grid item xs={6}>
+        <DraggableSVG
+            SVGComponent={SVGComponent}
+            id={id}
+            setDraggedId={setDraggedId}
+            setMovingSVG={setMovingSVG}
+        />
+    </Grid>
+)
+
 const Sidebar = ({
-    drawerWidth,
-    isSidebarOpen,
-    setIsSidebarOpen,
-    setDraggedId,
-    setMovingSVG
+                     drawerWidth,
+                     isSidebarOpen,
+                     setIsSidebarOpen,
+                     setDraggedId,
+                     setMovingSVG
                  }) => {
     const theme = useTheme()
+
+    const sidebarStyles = {
+        width: drawerWidth,
+        height: '50vh',
+        overflow: 'auto',
+        backgroundColor: theme.palette.background.alt,
+        '&:hover': {
+            backgroundColor: 'primary.main',
+            opacity: [0.9, 0.8, 0.7],
+        },
+    }
+
+    const handleClose = () => {
+        setIsSidebarOpen(false);
+        // other logic...
+    };
+
     return (
-        <Box
-            component="nav"
-        >
-            <CenteredBox
-                position="fixed"
-                top={0} // Position from top
-                left={0} // Position from left
-                bottom={0} // Position from bottom
-            >
+        <Box component="nav">
+            <CenteredBox position="fixed" top={0} left={0} bottom={0}>
                 {isSidebarOpen && (
                     <Box
                         open={isSidebarOpen}
-                        onClose={() => setIsSidebarOpen(false)}
-                        sx={{
-                            width: drawerWidth,
-                            height: '50vh',
-                            overflow: 'auto',
-                            backgroundColor: theme.palette.background.alt,
-                            '&:hover': {
-                                backgroundColor: 'primary.main',
-                                opacity: [0.9, 0.8, 0.7],
-                            },
-                        }}
+                        onClose={handleClose}
+                        sx={sidebarStyles}
                     >
                         <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                                <DraggableSVG
-                                    SVGComponent={UpwardTriangle}
-                                    id="upwardTriangle"
+                            {SVG_CONFIGS.map(({ component, id }, index) => (
+                                <DraggableSVGItem
+                                    key={index}
+                                    SVGComponent={component}
+                                    id={id}
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
                                 />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <DraggableSVG
-                                    SVGComponent={DownwardTriangle}
-                                    id="downwardTriangle"
-                                    setDraggedId={setDraggedId}
-                                    setMovingSVG={setMovingSVG}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <DraggableSVG
-                                    SVGComponent={UpwardCurvedLine}
-                                    id="upwardCurvedLine"
-                                    setDraggedId={setDraggedId}
-                                    setMovingSVG={setMovingSVG}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <DraggableSVG
-                                    SVGComponent={DownwardCurvedLine}
-                                    id="downwardCurvedLine"
-                                    setDraggedId={setDraggedId}
-                                    setMovingSVG={setMovingSVG}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <DraggableSVG
-                                    SVGComponent={DownwardTriangleFilled}
-                                    id="downwardTriangleFilled"
-                                    setDraggedId={setDraggedId}
-                                    setMovingSVG={setMovingSVG}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <DraggableSVG
-                                    SVGComponent={UpwardTriangleFilled}
-                                    id="upwardTriangleFilled"
-                                    setDraggedId={setDraggedId}
-                                    setMovingSVG={setMovingSVG}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <DraggableSVG
-                                    SVGComponent={CircleFilled}
-                                    id="circleFilled"
-                                    setDraggedId={setDraggedId}
-                                    setMovingSVG={setMovingSVG}
-                                />
-                            </Grid>
+                            ))}
                         </Grid>
                     </Box>
                 )}
@@ -114,4 +97,4 @@ const Sidebar = ({
     )
 }
 
-export default Sidebar
+export default Sidebar;
