@@ -98,6 +98,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
     }));
 
     const handleMouseDown = (event) => {
+        if (!event.target.classList.contains('node')) return;
         setIsDrawing(true);
         const point = d3.pointer(event);
         setStartPosition({x: point[0], y: point[1]});

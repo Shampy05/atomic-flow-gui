@@ -89,6 +89,7 @@ const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStar
                         .attr("cy", y)
                         .attr("r", nodeRadius)
                         .attr("fill", "blue")
+                        .attr("class", "node")
                         .on("mousedown", (event) => {
                             event.stopPropagation();
                             event.preventDefault(); // Prevent the default drag start event
