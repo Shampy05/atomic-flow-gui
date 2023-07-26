@@ -13,17 +13,6 @@ import {
 } from "./SVGComponents";
 import DraggableSVG from "./DraggableSVG";
 
-const StyledBox = styled(Box)({
-    width: drawerWidth,
-    height: '50vh',
-    overflow: 'auto',
-    backgroundColor: theme.palette.background.alt,
-    '&:hover': {
-        backgroundColor: 'primary.main',
-        opacity: [0.9, 0.8, 0.7],
-    },
-})
-
 const SVG_CONFIGS = [
     { component: UpwardTriangle, id: 'upwardTriangle' },
     { component: DownwardTriangle, id: 'downwardTriangle' },

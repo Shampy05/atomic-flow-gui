@@ -16,6 +16,7 @@ import {
     UpwardTriangleFilled,
     CircleFilled
 } from "../../components/SVGComponents";
+import circleFilledCode from "../../components/SVGComponents/CircleFilledCode";
 
 const SVGComponents = {
     upwardTriangle: UpwardTriangle,
@@ -25,6 +26,16 @@ const SVGComponents = {
     downwardTriangleFilled: DownwardTriangleFilled,
     upwardTriangleFilled: UpwardTriangleFilled,
     circleFilled: CircleFilled
+}
+
+const SVGNodes = {
+    upwardTriangle: [{x: 0.5, y: 0.1}, {x: 0.9, y: 0.8}, {x: 0.1, y: 0.8}],
+    downwardTriangle: [{x: 0.5, y: 0.9}, {x: 0.9, y: 0.2}, {x: 0.1, y: 0.2}],
+    upwardCurvedLine: [{x: 0.2, y: 0.6}, {x: 0.8, y: 0.6}],
+    downwardCurvedLine: [{x: 0.2, y: 0.4}, {x: 0.8, y: 0.4}],
+    downwardTriangleFilled: [{x: 0.5, y: 0.9}, {x: 0.9, y: 0.2}, {x: 0.1, y: 0.2}],
+    upwardTriangleFilled: [{x: 0.5, y: 0.1}, {x: 0.9, y: 0.8}, {x: 0.1, y: 0.8}],
+    circleFilled: [{x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}]
 }
 
 const Layout = () => {
@@ -53,8 +64,11 @@ const Layout = () => {
         const newSVG = {
             id: uuidv4(),
             position: position,
-            component: SVGComponents[i] // Here we're storing the component, not the called function
+            component: SVGComponents[i],
+            nodes: SVGNodes[i].map(node => ({ ...node, id: uuidv4() }))
         };
+
+        console.log("Layout.jsx -> newSVG: ", newSVG);
 
         setSVGs((SVGs) => [...SVGs, newSVG]);
         setCount(count + 1);

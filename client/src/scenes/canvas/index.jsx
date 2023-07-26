@@ -8,7 +8,6 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPos
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: "svg",
         item: () => {
-            console.log("Id: ", SVG.id);
             return {
                 id: SVG.id,
                 onCanvas: true
@@ -63,6 +62,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
     const [lines, setLines] = useState([]);
     const [isDrawing, setIsDrawing] = useState(false);
     const [startPosition, setStartPosition] = useState({x: 0, y: 0});
+    const [connections, setConnections] = useState([]);
 
     const [selectedSVG, setSelectedSVG] = useState(null);
 
@@ -98,43 +98,61 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
     }));
 
     const handleMouseDown = (event) => {
-        if (!event.target.classList.contains('node')) return;
+        console.log("MouseDown event triggered"); // Check if function is being called
+        console.log("Lines", lines); // Check if event.target is the correct element
+
+        if (!event.target.classList.contains('node')) {
+            console.log("Target element does not have 'node' class"); // Check if condition is causing function to exit
+            return;
+        }
+
+        console.log("Target element has 'node' class"); // Check if condition is causing function to exit
+
         setIsDrawing(true);
         const point = d3.pointer(event);
+        const nodeId = event.target.getAttribute('data-id');
+        console.log("Canvas.jsx -> nodeId: ", nodeId);
         setStartPosition({x: point[0], y: point[1]});
         setLines(prev => [
             ...prev,
             {
                 start: {x: point[0], y: point[1]},
-                end: {x: point[0], y: point[1]}
+                end: {x: point[0], y: point[1]},
+                nodeId: nodeId
             }]);
     }
+
 
     const handleMouseMove = (event) => {
         if (!isDrawing) return;
         const point = d3.pointer(event);
-
         setLines(prev => {
             const lines = [...prev];
             const lastLineIndex = lines.length - 1;
             if (lastLineIndex >= 0) {
                 lines[lastLineIndex] = {
-                    start: startPosition,
-                    end: {x: point[0], y: point[1]}
+                    ...lines[lastLineIndex],
+                    end: {x: point[0], y: point[1]},
                 };
-            } else {
-                lines.push({
-                    start: startPosition,
-                    end: {x: point[0], y: point[1]}
-                });
             }
-
             return lines;
         });
     }
 
+
+
     const handleMouseUp = (event) => {
         setIsDrawing(false);
+        if (!event.target.classList.contains('node')) return;
+        const nodeId = event.target.getAttribute('data-id');
+        const lastLine = lines[lines.length - 1];
+        setConnections(prev => [
+            ...prev,
+            {
+                start: lastLine.start,
+                end: lastLine.end,
+            }
+            ]);
     }
 
     const canvasRef = useRef(null);

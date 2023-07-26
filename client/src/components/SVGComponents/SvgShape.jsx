@@ -35,18 +35,16 @@ const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStar
                         .attr("cy", y)
                         .attr("r", nodeRadius)
                         .attr("fill", "blue")
+                        .attr("class", "node")
                         .on("mousedown", (event) => {
                             event.stopPropagation();
                             event.preventDefault(); // Prevent the default drag start event
 
                             // Get the SVG coordinates of the mousedown event
                             const point = d3.pointer(event);
-                            console.log("SVGShape.jsx -> point: ", point);
-
 
                             // Translate these to screen coordinates
                             const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
-                            console.log("SVGShape.jsx -> svgRect: ", svgRect);
                             // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
                             const scaleX = svgRect.width / 50;
                             const scaleY = svgRect.height / 50;
@@ -55,8 +53,6 @@ const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStar
                                 x: point[0] * scaleX + svgRect.left,
                                 y: point[1] * scaleY + svgRect.top
                             };
-
-                            console.log("SVGShape.jsx -> adjustedPoint: ", adjustedPoint);
 
                             setIsDrawing(true);
                             setStartPosition(adjustedPoint);
@@ -82,26 +78,24 @@ const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStar
                 });
 
                 // draw nodes
-                nodes.forEach(({x, y}) => {
-                    console.log(x, y);
+                nodes.forEach(({x, y}, index) => {
                     svgElement.append("circle")
                         .attr("cx", x)
                         .attr("cy", y)
                         .attr("r", nodeRadius)
                         .attr("fill", "blue")
                         .attr("class", "node")
+                        .attr("data-id", "node")
                         .on("mousedown", (event) => {
                             event.stopPropagation();
                             event.preventDefault(); // Prevent the default drag start event
 
                             // Get the SVG coordinates of the mousedown event
                             const point = d3.pointer(event);
-                            console.log("SVGShape.jsx -> point: ", point);
 
 
                             // Translate these to screen coordinates
                             const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
-                            console.log("SVGShape.jsx -> svgRect: ", svgRect);
                             // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
                             const scaleX = svgRect.width / 50;
                             const scaleY = svgRect.height / 50;
@@ -111,7 +105,6 @@ const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStar
                                 y: point[1] * scaleY + svgRect.top
                             };
 
-                            console.log("SVGShape.jsx -> adjustedPoint: ", adjustedPoint);
 
                             setIsDrawing(true);
                             setStartPosition(adjustedPoint);
@@ -141,18 +134,16 @@ const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStar
                         .attr("cy", y)
                         .attr("r", nodeRadius)
                         .attr("fill", "blue")
+                        .attr("class", "node")
                         .on("mousedown", (event) => {
                             event.stopPropagation();
                             event.preventDefault(); // Prevent the default drag start event
 
                             // Get the SVG coordinates of the mousedown event
                             const point = d3.pointer(event);
-                            console.log("SVGShape.jsx -> point: ", point);
-
 
                             // Translate these to screen coordinates
                             const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
-                            console.log("SVGShape.jsx -> svgRect: ", svgRect);
                             // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
                             const scaleX = svgRect.width / 50;
                             const scaleY = svgRect.height / 50;
@@ -161,8 +152,6 @@ const SVGShape = ({ shape, attributes, selected, setIsDrawing, setLines, setStar
                                 x: point[0] * scaleX + svgRect.left,
                                 y: point[1] * scaleY + svgRect.top
                             };
-
-                            console.log("SVGShape.jsx -> adjustedPoint: ", adjustedPoint);
 
                             setIsDrawing(true);
                             setStartPosition(adjustedPoint);
