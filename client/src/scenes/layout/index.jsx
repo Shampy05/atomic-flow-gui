@@ -65,7 +65,7 @@ const Layout = () => {
             id: uuidv4(),
             position: position,
             component: SVGComponents[i],
-            nodes: SVGNodes[i].map(node => ({ ...node, id: uuidv4() }))
+            nodes: SVGNodes[i].map(node => ({ ...node, id: uuidv4(), svgPosition: position })),
         };
 
         console.log("Layout.jsx -> newSVG: ", newSVG);
