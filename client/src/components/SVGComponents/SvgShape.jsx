@@ -7,24 +7,29 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
     const nodeRadius = 3;
 
     const getPath = function (start, end) {
-        const midPoint = {
-            x: (start.x + end.x) / 2,
-            y: (start.y + end.y) / 2
+        // Determine the distance between start and end x-coordinates
+        const xDist = end.x - start.x;
+        const yDist = end.y - start.y; // Add y distance as well
+
+        // Control point for the quadratic Bezier curve
+        const control = {
+            x: start.x + xDist / 2, // Midpoint between start and end x-coordinates
+            y: start.y - yDist / 2 - 50 // Adjust the y coordinate for a more pronounced curve
         };
 
-        const k = 120
-
-        // Using d3.path to create a path with a quadratic curve
         const path = d3.path();
         path.moveTo(start.x, start.y);
-        path.bezierCurveTo(end.x - k, start.y, start.x, end.y, end.x - k, end.y);
-        console.log('Start:', start);
-        console.log('End:', end);
-        console.log('MidPoint:', midPoint);
-        console.log('Path:', path.toString());
+        path.quadraticCurveTo(control.x, control.y, end.x, end.y);
+
+        console.log("Start:", start);
+        console.log("End:", end);
+        console.log("Control:", control);
 
         return path.toString();
     }
+
+
+
 
 
 
@@ -55,6 +60,8 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
             y: adjustedPoint.y + 10
         };
 
+        const lineId = `line-${node.nodeId}`;
+
 
         const path = getPath(adjustedPoint, adjustedEnd); // Get the path for the line
 
@@ -68,10 +75,11 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
         setLines(prev => [
             ...prev,
             {
+                id: lineId, // Add an id to identify the line
                 start: adjustedPoint,
                 end: adjustedEnd,
                 path,
-                node: { id: nodeId, x: node.x, y: node.y, svgId: node.svgId } // Include the node id here
+                node: { id: nodeId, x: node.x, y: node.y, svgId: node.svgId }
             }
         ]);
     }
@@ -83,6 +91,7 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
         const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
         const scaleX = svgRect.width / 50;
         const scaleY = svgRect.height / 50;
+        const lineId = `line-${node.nodeId}`;
 
         const currentPoint = {
             x: (point[0] + svgRect.left) / scaleX,
@@ -92,7 +101,7 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
         setIsDrawing(false);
 
         setLines(prev => prev.map(line => {
-            if (line.start.x === currentPoint.x && line.start.y === currentPoint.y) { // Compare x and y values
+            if (line.id === lineId) { // Compare line id
                 const newPath = getPath(line.start, currentPoint); // Get the path for the line
                 return { ...line, path: newPath, end: currentPoint, node: { ...line.node } };
             }
@@ -103,7 +112,6 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
 
     useEffect(() => {
         const svgElement = d3.select(ref.current);
-
         svgElement.selectAll("*").remove(); // clear all child elements
 
         const element = shapeObj.draw(svgElement);
@@ -114,11 +122,13 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
 
             // Draw the lines
             lines.forEach((line) => {
-                console.log('Line:', line);
+                console.log('Appending line:', line);
+                console.log('Line Path:', line.path);
                 svgElement
                     .append("path")
                     .attr("d", line.path)
                     .attr("stroke", "black") // Or any other color
+                    .attr("stroke-width", 2)
                     .attr("fill", "none");
             });
 

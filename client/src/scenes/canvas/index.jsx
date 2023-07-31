@@ -180,6 +180,22 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
             ]);
     }
 
+    const calculateControlPoint = (start, end) => {
+        const midpoint = {
+            x: (start.x + end.x) / 2,
+            y: (start.y + end.y) / 2,
+        };
+        const length = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+        const offset = length / 3; // adjust this value to change the curvature
+
+        // this will curve the line upward; change the sign to curve downward
+        return {
+            x: midpoint.x,
+            y: midpoint.y - offset,
+        };
+    }
+
+
     const canvasRef = useRef(null);
     drop(canvasRef)
 
@@ -219,17 +235,19 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                 onMouseUp={handleMouseUp}
                 onClick={handleCanvasClick}
             >
-                {lines.map((line, index) => (
-                    <line
-                        key={index}
-                        x1={line.start.x}
-                        y1={line.start.y}
-                        x2={line.end.x}
-                        y2={line.end.y}
-                        stroke="black"
-                        strokeWidth={2}
-                    />
-                ))}
+                {lines.map((line, index) => {
+                    const control = calculateControlPoint(line.start, line.end);
+                    return (
+                        <path
+                            key={index}
+                            d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
+                            stroke="black"
+                            fill="none"
+                            strokeWidth={2}
+                        />
+                    );
+                })}
+
             </svg>
         </Box>
     );
