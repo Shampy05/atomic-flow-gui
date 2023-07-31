@@ -1,6 +1,6 @@
 import SVGShape, { Polygon } from "./SvgShape";
 
-const DownwardTriangleCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => {
+const DownwardTriangleCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition, svgId, nodeId }) => {
     const shapeObj = new Polygon({
         points: "25,45 45,10 5,10",
         fill: "none",
@@ -17,6 +17,8 @@ const DownwardTriangleCode = ({ selected, setLines, setIsDrawing, setStartPositi
             setStartPosition={setStartPosition}
             setIsNodeClicked={setIsNodeClicked}
             svgPosition={svgPosition}
+            svgId={svgId}
+            nodeId={nodeId}
         />
     );
 };

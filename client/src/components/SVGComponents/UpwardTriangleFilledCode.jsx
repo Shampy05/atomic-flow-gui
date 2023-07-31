@@ -1,6 +1,6 @@
 import SVGShape, { Polygon } from "./SvgShape";
 
-const UpwardTriangleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => {
+const UpwardTriangleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition, svgId, nodeId }) => {
     const shapeObj = new Polygon({
         points: "25,5 45,40 5,40",
         fill: "black",
@@ -17,6 +17,8 @@ const UpwardTriangleFilledCode = ({ selected, setLines, setIsDrawing, setStartPo
             setStartPosition={setStartPosition}
             setIsNodeClicked={setIsNodeClicked}
             svgPosition={svgPosition}
+            svgId={svgId}
+            nodeId={nodeId}
         />
     );
 };

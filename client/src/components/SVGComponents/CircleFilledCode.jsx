@@ -1,6 +1,6 @@
 import SVGShape, { Circle } from "./SvgShape";
 
-const CircleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition }) => {
+const CircleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition, svgId, nodeId }) => {
     const shapeObj = new Circle({
         cx: 25,
         cy: 25,
@@ -19,6 +19,8 @@ const CircleFilledCode = ({ selected, setLines, setIsDrawing, setStartPosition, 
             setStartPosition={setStartPosition}
             setIsNodeClicked={setIsNodeClicked}
             svgPosition={svgPosition}
+            svgId={svgId}
+            nodeId={nodeId}
         />
     );
 };

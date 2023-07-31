@@ -2,9 +2,32 @@ import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 import { Box } from "@mui/material";
 
-const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, setStartPosition, setIsNodeClicked, svgPosition }) => {
+const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartPosition, setIsNodeClicked, svgPosition, nodeId, svgId }) => {
     const ref = useRef();
-    const nodeRadius = 3; // radius of the nodes
+    const nodeRadius = 3;
+
+    const getPath = function (start, end) {
+        const midPoint = {
+            x: (start.x + end.x) / 2,
+            y: (start.y + end.y) / 2
+        };
+
+        const k = 120
+
+        // Using d3.path to create a path with a quadratic curve
+        const path = d3.path();
+        path.moveTo(start.x, start.y);
+        path.bezierCurveTo(end.x - k, start.y, start.x, end.y, end.x - k, end.y);
+        console.log('Start:', start);
+        console.log('End:', end);
+        console.log('MidPoint:', midPoint);
+        console.log('Path:', path.toString());
+
+        return path.toString();
+    }
+
+
+
 
     function handleMousedown(event, node) {
         event.stopPropagation();
@@ -21,10 +44,24 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, setStartPosition
         const scaleX = svgRect.width / 50;
         const scaleY = svgRect.height / 50;
 
+
         const adjustedPoint = {
             x: node.x * scaleX + svgRect.left,
             y: node.y * scaleY + svgRect.top
         };
+
+        const adjustedEnd = {
+            x: adjustedPoint.x + 10,
+            y: adjustedPoint.y + 10
+        };
+
+
+        const path = getPath(adjustedPoint, adjustedEnd); // Get the path for the line
+
+        console.log('Adjusted Start Point:', adjustedPoint);
+        console.log('Adjusted End Point:', adjustedEnd);
+        console.log('Path:', path);
+
 
         setIsDrawing(true);
         setStartPosition(adjustedPoint);
@@ -32,11 +69,14 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, setStartPosition
             ...prev,
             {
                 start: adjustedPoint,
-                end: adjustedPoint,
+                end: adjustedEnd,
+                path,
                 node: { id: nodeId, x: node.x, y: node.y, svgId: node.svgId } // Include the node id here
             }
         ]);
     }
+
+
 
     function handleMouseup(event, node) {
         const point = d3.pointer(event);
@@ -45,23 +85,25 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, setStartPosition
         const scaleY = svgRect.height / 50;
 
         const currentPoint = {
-            x: point[0] * scaleX + svgRect.left,
-            y: point[1] * scaleY + svgRect.top
+            x: (point[0] + svgRect.left) / scaleX,
+            y: (point[1] + svgRect.top) / scaleY
         };
 
-        // Use currentPoint where you need the position of the mouse at the moment of the mouseup event
         setIsDrawing(false);
 
         setLines(prev => prev.map(line => {
-            if (line.start === currentPoint) {
-                return { ...line, end: currentPoint, node: { id: node.id, x: node.x, y: node.y, svgId: node.svgId } } // store the node's id here
+            if (line.start.x === currentPoint.x && line.start.y === currentPoint.y) { // Compare x and y values
+                const newPath = getPath(line.start, currentPoint); // Get the path for the line
+                return { ...line, path: newPath, end: currentPoint, node: { ...line.node } };
             }
             return line;
         }));
     }
 
+
     useEffect(() => {
         const svgElement = d3.select(ref.current);
+
         svgElement.selectAll("*").remove(); // clear all child elements
 
         const element = shapeObj.draw(svgElement);
@@ -70,22 +112,33 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, setStartPosition
             element.attr('stroke', '#A584A5');
             element.attr('stroke-width', 2);
 
-            shapeObj.nodes.forEach(({x, y, svgId, id}) => {
+            // Draw the lines
+            lines.forEach((line) => {
+                console.log('Line:', line);
+                svgElement
+                    .append("path")
+                    .attr("d", line.path)
+                    .attr("stroke", "black") // Or any other color
+                    .attr("fill", "none");
+            });
+
+            shapeObj.nodes.forEach(({x, y}, index) => {
                 svgElement.append("circle")
                     .attr("cx", x)
                     .attr("cy", y)
                     .attr("r", nodeRadius)
                     .attr("fill", "blue")
                     .attr("class", "node")
-                    .attr("data-id", id)
-                    .on("mousedown", (event) => handleMousedown(event, {x, y, svgId, id}))
-                    .on("mouseup", (event) => handleMouseup(event, {x, y, svgId, id}));
+                    .attr("data-id", nodeId[index])
+                    .on("mousedown", (event) => handleMousedown(event, {x, y, svgId, nodeId: nodeId[index]}))
+                    .on("mouseup", (event) => handleMouseup(event, {x, y, svgId, nodeId: nodeId[index]}));
             });
         }
 
         // Clean up function to remove the drawn shape when the component unmounts or updates
         return () => svgElement.selectAll("*").remove();
-    }, [shapeObj, selected]); // rerun effect when shapeObj, or selected changes
+    }, [shapeObj, selected, lines]); // rerun effect when shapeObj, selected, or lines changes
+
 
     return (
         <Box>
@@ -113,7 +166,14 @@ export class Shape {
 
 export class Circle extends Shape {
     draw(svgElement) {
-        return svgElement.append('circle').attr('cx', this.attributes.cx).attr('cy', this.attributes.cy).attr('r', this.attributes.r);
+        return svgElement
+            .append('circle')
+            .attr('cx', this.attributes.cx)
+            .attr('cy', this.attributes.cy)
+            .attr('r', this.attributes.r)
+            .attr('fill', this.attributes.fill || 'none')
+            .attr('stroke', this.attributes.stroke || 'black')
+            .attr('stroke-width', this.attributes.strokeWidth || 1);
     }
 
     get nodes() {
@@ -125,7 +185,12 @@ export class Circle extends Shape {
 
 export class Path extends Shape {
     draw(svgElement) {
-        return svgElement.append('path').attr('d', this.attributes.d);
+        return svgElement
+            .append('path')
+            .attr('d', this.attributes.d)
+            .attr('fill', this.attributes.fill || 'none')
+            .attr('stroke', this.attributes.stroke || 'black')
+            .attr('stroke-width', this.attributes.strokeWidth || 1);
     }
 
     get nodes() {
@@ -139,7 +204,12 @@ export class Path extends Shape {
 
 export class Polygon extends Shape {
     draw(svgElement) {
-        return svgElement.append('polygon').attr('points', this.attributes.points);
+        return svgElement
+            .append('polygon')
+            .attr('points', this.attributes.points)
+            .attr('fill', this.attributes.fill || 'none')
+            .attr('stroke', this.attributes.stroke || 'black')
+            .attr('stroke-width', this.attributes.strokeWidth || 1);
     }
 
     get nodes() {

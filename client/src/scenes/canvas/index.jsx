@@ -1,22 +1,23 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { Box } from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
 import * as d3 from "d3";
 
-const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, svgPosition }) => {
+const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, svgPosition }) => {
     const [isNodeClicked, setIsNodeClicked] = useState(false);
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: "svg",
         item: () => {
             return {
                 id: SVG.id,
-                onCanvas: true
+                onCanvas: true,
+                oldPosition: SVG.position,
             };
         },
         canDrag: () => !isNodeClicked,
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
-        }),
+        })
     }), [isNodeClicked]);
 
     const handleClick = (e) => {
@@ -49,9 +50,12 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPos
                 selected={selected || isDragging}
                 setIsDrawing={setIsDrawing}
                 setLines={setLines}
+                lines={lines}
                 setStartPosition={setStartPosition}
                 setIsNodeClicked={setIsNodeClicked}
                 svgPosition={svgPosition}
+                svgId={SVG.id}
+                nodeId={SVG.nodes.map(node => node.id)}
             />
         </div>
     );
@@ -85,12 +89,34 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                 y: dropOffset.y - canvasOffset.y
             }
 
+            console.log("Canvas.jsx -> position: ", position);
+
             if (item.onCanvas) {
                 setSVGs(prev => prev.map(svg =>
                     svg.id === item.id
                         ? {...svg, position: position}
                         : svg
                 ));
+
+                setLines(prev => prev.map(line => {
+                    console.log("line", line);
+                    console.log("line.svgId", line.svgId);
+                    console.log("item.id", item.id);
+
+                    if (line.node.svgId === item.id) {
+                        console.log("nodeId matches item.id");
+                        console.log("line.node", line.node);
+                        return {
+                            ...line,
+                            // make sure the line is connected to the node that was dropped
+                            start: {
+                                x: position.x + line.node.x,
+                                y: position.y + line.node.y
+                            }
+                        };
+                    }
+                    return line;
+                }));
             } else {
                 addSVG(item.id, position);
             }
@@ -98,8 +124,6 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
     }));
 
     const handleMouseDown = (event) => {
-        console.log("MouseDown event triggered"); // Check if function is being called
-        console.log("Lines", lines); // Check if event.target is the correct element
 
         if (!event.target.classList.contains('node')) {
             console.log("Target element does not have 'node' class"); // Check if condition is causing function to exit
@@ -113,13 +137,14 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
         const nodeId = event.target.getAttribute('data-id');
         console.log("Canvas.jsx -> nodeId: ", nodeId);
         setStartPosition({x: point[0], y: point[1]});
-        setLines(prev => [
-            ...prev,
-            {
-                start: {x: point[0], y: point[1]},
-                end: {x: point[0], y: point[1]},
-                nodeId: nodeId
-            }]);
+        // setLines(prev => [
+        //     ...prev,
+        //     {
+        //         start: {x: point[0], y: point[1]},
+        //         end: {x: point[0], y: point[1]},
+        //         nodeId: nodeId
+        //     }]);
+        console.log("Lines in handleMouseDown", lines);
     }
 
 
@@ -180,6 +205,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                     select={selectSVG}
                     setIsDrawing={setIsDrawing}
                     setLines={setLines}
+                    lines={lines}
                     setStartPosition={setStartPosition}
                     svgPosition={SVG.position}
                     key={`${SVG.id}-${index}`}
