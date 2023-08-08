@@ -1,40 +1,14 @@
-import React, { useRef, useEffect } from "react";
+import React, {useRef, useEffect, useState, useCallback} from "react";
 import * as d3 from "d3";
 import { Box } from "@mui/material";
 
-const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartPosition, setIsNodeClicked, svgPosition, nodeId, svgId }) => {
+const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines, setStartPosition, setIsNodeClicked, svgPosition, nodeId, isSidebar, svgId, allNodes, setAllNodes }) => {
     const ref = useRef();
     const nodeRadius = 3;
 
-    const getPath = function (start, end) {
-        // Determine the distance between start and end x-coordinates
-        const xDist = end.x - start.x;
-        const yDist = end.y - start.y; // Add y distance as well
-
-        // Control point for the quadratic Bezier curve
-        const control = {
-            x: start.x + xDist / 2, // Midpoint between start and end x-coordinates
-            y: start.y - yDist / 2 - 50 // Adjust the y coordinate for a more pronounced curve
-        };
-
-        const path = d3.path();
-        path.moveTo(start.x, start.y);
-        path.quadraticCurveTo(control.x, control.y, end.x, end.y);
-
-        console.log("Start:", start);
-        console.log("End:", end);
-        console.log("Control:", control);
-
-        return path.toString();
-    }
 
 
-
-
-
-
-
-    function handleMousedown(event, node) {
+    function handleMouseDown(event, node) {
         event.stopPropagation();
         event.preventDefault(); // Prevent the default drag start event
 
@@ -47,8 +21,11 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
         const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
         // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
         const scaleX = svgRect.width / 50;
+        console.log("scaleX", scaleX)
         const scaleY = svgRect.height / 50;
+        console.log("scaleY", scaleY)
 
+        // adjustLinePositions();
 
         const adjustedPoint = {
             x: node.x * scaleX + svgRect.left,
@@ -63,13 +40,6 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
         const lineId = `line-${node.nodeId}`;
 
 
-        const path = getPath(adjustedPoint, adjustedEnd); // Get the path for the line
-
-        console.log('Adjusted Start Point:', adjustedPoint);
-        console.log('Adjusted End Point:', adjustedEnd);
-        console.log('Path:', path);
-
-
         setIsDrawing(true);
         setStartPosition(adjustedPoint);
         setLines(prev => [
@@ -78,37 +48,101 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
                 id: lineId, // Add an id to identify the line
                 start: adjustedPoint,
                 end: adjustedEnd,
-                path,
-                node: { id: nodeId, x: node.x, y: node.y, svgId: node.svgId }
+                startNode: { id: nodeId, x: node.x, y: node.y, svgId: node.svgId },
+                endNode: null
             }
         ]);
     }
 
+    function handleMouseUp(event, node, svgElement) {
+        // adjustLinePositions()
+        if(event.target.classList.contains("node")) {
+            const releasedNodeData = {
+                x: parseFloat(event.target.getAttribute("cx")),
+                y: parseFloat(event.target.getAttribute("cy")),
+                svgId: svgId,
+                nodeId: event.target.getAttribute("data-id")
+            };
 
-
-    function handleMouseup(event, node) {
-        const point = d3.pointer(event);
-        const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
-        const scaleX = svgRect.width / 50;
-        const scaleY = svgRect.height / 50;
-        const lineId = `line-${node.nodeId}`;
-
-        const currentPoint = {
-            x: (point[0] + svgRect.left) / scaleX,
-            y: (point[1] + svgRect.top) / scaleY
-        };
-
-        setIsDrawing(false);
-
-        setLines(prev => prev.map(line => {
-            if (line.id === lineId) { // Compare line id
-                const newPath = getPath(line.start, currentPoint); // Get the path for the line
-                return { ...line, path: newPath, end: currentPoint, node: { ...line.node } };
-            }
-            return line;
-        }));
+            setLines(prevLines => {
+                const lastLineIndex = prevLines.length - 1;
+                const updatedLine = { ...prevLines[lastLineIndex], endNode: releasedNodeData };
+                return [...prevLines.slice(0, lastLineIndex), updatedLine];
+            });
+            setIsDrawing(false);
+        }
     }
 
+    function adjustLinePositions() {
+        const svgRect = ref.current.getBoundingClientRect();
+        console.log(svgRect);
+
+        setLines(prevLines => {
+            return prevLines.map(line => {
+                if (line.startNode.svgId === svgId) {
+                    const scaleX = svgRect.width / 50;
+                    const scaleY = svgRect.height / 50;
+                    const adjustedPoint = {
+                        x: line.startNode.x * scaleX + svgRect.left,
+                        y: line.startNode.y * scaleY + svgRect.top
+                    };
+                    return {
+                        ...line,
+                        start: adjustedPoint
+                    };
+                }
+                return line;
+            });
+        });
+    }
+
+    const addNodes = (index, x, y) => {
+        let node = {id: nodeId[index], x, y, svgId};
+
+        // Check if the node already exists based on its id
+        if (!allNodes.some(existingNode => existingNode.id === node.id)) {
+            return [node]; // Return as array for easy spread later
+        }
+
+        return []; // Return an empty array if node already exists
+    }
+
+    const handleNodeHover = (event) => {
+        const targetNode = d3.select(event.target);
+        // set pointer event to all
+        targetNode.attr('pointer-events', 'all');
+        if (isDrawing) {
+            targetNode.attr('fill', 'red');  // Highlight node color when hovering over while drawing
+        }
+    }
+
+    const handleNodeMouseout = (event) => {
+        const targetNode = d3.select(event.target);
+        if (isDrawing) {
+            targetNode.attr('fill', 'blue');  // Revert to original color on mouseout
+        }
+    }
+
+    const drawNode = (svgElement) => {
+        let newNodes = []
+        shapeObj.nodes.forEach(({x, y}, index) => {
+            svgElement.append("circle")
+                .attr("cx", x)
+                .attr("cy", y)
+                .attr("r", nodeRadius)
+                .attr("pointer-events", "auto")
+                .attr("class", isDrawing ? "node active-drag" : "node")
+                // .attr("visibility", selected ? "visible" : "hidden")
+                .attr("data-id", nodeId[index])
+                .on("mousedown", (event) => handleMouseDown(event, {x, y, svgId, nodeId: nodeId[index]}))
+                .on("mouseup", (event) => handleMouseUp(event, {x, y, svgId, nodeId: nodeId[index]}))
+                .on("mouseover", handleNodeHover)
+                .on("mouseout", handleNodeMouseout)
+
+            newNodes = [...newNodes, ...addNodes(index, x, y)];
+        });
+        setAllNodes(prev => [...prev, ...newNodes]);
+    }
 
     useEffect(() => {
         const svgElement = d3.select(ref.current);
@@ -116,38 +150,19 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, setLines, lines, setStartP
 
         const element = shapeObj.draw(svgElement);
 
+        if (!isSidebar) {
+            drawNode(svgElement)
+        }
+
         if (selected) {
             element.attr('stroke', '#A584A5');
             element.attr('stroke-width', 2);
-
-            // Draw the lines
-            lines.forEach((line) => {
-                console.log('Appending line:', line);
-                console.log('Line Path:', line.path);
-                svgElement
-                    .append("path")
-                    .attr("d", line.path)
-                    .attr("stroke", "black") // Or any other color
-                    .attr("stroke-width", 2)
-                    .attr("fill", "none");
-            });
-
-            shapeObj.nodes.forEach(({x, y}, index) => {
-                svgElement.append("circle")
-                    .attr("cx", x)
-                    .attr("cy", y)
-                    .attr("r", nodeRadius)
-                    .attr("fill", "blue")
-                    .attr("class", "node")
-                    .attr("data-id", nodeId[index])
-                    .on("mousedown", (event) => handleMousedown(event, {x, y, svgId, nodeId: nodeId[index]}))
-                    .on("mouseup", (event) => handleMouseup(event, {x, y, svgId, nodeId: nodeId[index]}));
-            });
         }
+
 
         // Clean up function to remove the drawn shape when the component unmounts or updates
         return () => svgElement.selectAll("*").remove();
-    }, [shapeObj, selected, lines]); // rerun effect when shapeObj, selected, or lines changes
+    }, [selected]); // rerun effect when shapeObj, selected, or lines changes
 
 
     return (

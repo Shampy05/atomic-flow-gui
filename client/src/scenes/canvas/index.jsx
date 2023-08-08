@@ -3,8 +3,9 @@ import { Box } from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
 import * as d3 from "d3";
 
-const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, svgPosition }) => {
+const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, svgPosition, allNodes, setAllNodes, isDrawing }) => {
     const [isNodeClicked, setIsNodeClicked] = useState(false);
+
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: "svg",
         item: () => {
@@ -17,7 +18,7 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPos
         canDrag: () => !isNodeClicked,
         collect: (monitor) => ({
             isDragging: !!monitor.isDragging(),
-        })
+        }),
     }), [isNodeClicked]);
 
     const handleClick = (e) => {
@@ -43,12 +44,16 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPos
                     left: SVG.position.x,
                     top: SVG.position.y,
                     width: "7rem",
-                    zIndex: 1
+                    backgroundColor: "transparent",
+                    zIndex: 1,
+                    pointerEvents: ( isDrawing ) ? "none" : "auto",
                 }}
+            className="svg-container"
         >
             <SVG.component
                 selected={selected || isDragging}
                 setIsDrawing={setIsDrawing}
+                isDrawing={isDrawing}
                 setLines={setLines}
                 lines={lines}
                 setStartPosition={setStartPosition}
@@ -56,19 +61,21 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPos
                 svgPosition={svgPosition}
                 svgId={SVG.id}
                 nodeId={SVG.nodes.map(node => node.id)}
+                allNodes={allNodes}
+                setAllNodes={setAllNodes}
             />
         </div>
     );
 };
 
-const Canvas = ({ addSVG, SVGs, setSVGs }) => {
+const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
     const svgRef = useRef();
     const [lines, setLines] = useState([]);
-    const [isDrawing, setIsDrawing] = useState(false);
     const [startPosition, setStartPosition] = useState({x: 0, y: 0});
     const [connections, setConnections] = useState([]);
-
+    const [lineLetters, setLineLetters] = useState([]);
     const [selectedSVG, setSelectedSVG] = useState(null);
+    const [allNodes, setAllNodes] = useState([]);
 
     const selectSVG = (id) => {
         setSelectedSVG(id);
@@ -89,8 +96,6 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                 y: dropOffset.y - canvasOffset.y
             }
 
-            console.log("Canvas.jsx -> position: ", position);
-
             if (item.onCanvas) {
                 setSVGs(prev => prev.map(svg =>
                     svg.id === item.id
@@ -98,21 +103,18 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                         : svg
                 ));
 
-                setLines(prev => prev.map(line => {
-                    console.log("line", line);
-                    console.log("line.svgId", line.svgId);
-                    console.log("item.id", item.id);
+                const scaleX = 2.2399307250976563
+                const scaleY = 2.2399307250976563
 
-                    if (line.node.svgId === item.id) {
-                        console.log("nodeId matches item.id");
-                        console.log("line.node", line.node);
+                setLines(prev => prev.map(line => {
+                    if (line.startNode.svgId === item.id) {
                         return {
                             ...line,
                             // make sure the line is connected to the node that was dropped
                             start: {
-                                x: position.x + line.node.x,
-                                y: position.y + line.node.y
-                            }
+                                x: position.x + (line.startNode.x * scaleX),
+                                y: position.y + (line.startNode.y * scaleY),
+                            },
                         };
                     }
                     return line;
@@ -126,25 +128,13 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
     const handleMouseDown = (event) => {
 
         if (!event.target.classList.contains('node')) {
-            console.log("Target element does not have 'node' class"); // Check if condition is causing function to exit
             return;
         }
-
-        console.log("Target element has 'node' class"); // Check if condition is causing function to exit
 
         setIsDrawing(true);
         const point = d3.pointer(event);
         const nodeId = event.target.getAttribute('data-id');
-        console.log("Canvas.jsx -> nodeId: ", nodeId);
         setStartPosition({x: point[0], y: point[1]});
-        // setLines(prev => [
-        //     ...prev,
-        //     {
-        //         start: {x: point[0], y: point[1]},
-        //         end: {x: point[0], y: point[1]},
-        //         nodeId: nodeId
-        //     }]);
-        console.log("Lines in handleMouseDown", lines);
     }
 
 
@@ -168,16 +158,11 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
 
     const handleMouseUp = (event) => {
         setIsDrawing(false);
-        if (!event.target.classList.contains('node')) return;
-        const nodeId = event.target.getAttribute('data-id');
-        const lastLine = lines[lines.length - 1];
-        setConnections(prev => [
-            ...prev,
-            {
-                start: lastLine.start,
-                end: lastLine.end,
-            }
-            ]);
+
+        // const leftLetter = prompt("Enter a letter for the left side:");
+        // const rightLetter = prompt("Enter a letter for the right side:");
+        //
+        // setLineLetters(prev => [...prev, {left: leftLetter, right: rightLetter}]);
     }
 
     const calculateControlPoint = (start, end) => {
@@ -195,6 +180,13 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
         };
     }
 
+    const calculateMidpoint = (start, end) => {
+        return {
+            x: (start.x + end.x) / 2,
+            y: (start.y + end.y) / 2,
+        };
+    };
+
 
     const canvasRef = useRef(null);
     drop(canvasRef)
@@ -211,7 +203,6 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                 zIndex: '0',
                 display: 'flex',
                 justifyContent: 'center',
-                background: "pink"
             }}
         >
             {SVGs.map((SVG, index) => (
@@ -220,10 +211,13 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
                     selected={selectedSVG === SVG.id}
                     select={selectSVG}
                     setIsDrawing={setIsDrawing}
+                    isDrawing={isDrawing}
                     setLines={setLines}
                     lines={lines}
                     setStartPosition={setStartPosition}
                     svgPosition={SVG.position}
+                    allNodes={allNodes}
+                    setAllNodes={setAllNodes}
                     key={`${SVG.id}-${index}`}
                 />
             ))}
@@ -237,14 +231,35 @@ const Canvas = ({ addSVG, SVGs, setSVGs }) => {
             >
                 {lines.map((line, index) => {
                     const control = calculateControlPoint(line.start, line.end);
+                    const midpoint = calculateMidpoint(line.start, line.end);
                     return (
-                        <path
-                            key={index}
-                            d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
-                            stroke="black"
-                            fill="none"
-                            strokeWidth={2}
-                        />
+                        <React.Fragment key={index}>
+                            <text
+                                x={midpoint.x - 10} // adjust this value to shift the letter to the left of the midpoint
+                                y={midpoint.y}
+                                fontFamily="Arial"
+                                fontSize="14"
+                                fill="black"
+                            >
+                                {lineLetters[index]?.left || ""}
+                            </text>
+                            <text
+                                x={midpoint.x + 10} // adjust this value to shift the letter to the right of the midpoint
+                                y={midpoint.y}
+                                fontFamily="Arial"
+                                fontSize="14"
+                                fill="black"
+                            >
+                                {lineLetters[index]?.right || ""}
+                            </text>
+                            <path
+                                key={index}
+                                d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
+                                stroke="red"
+                                fill="none"
+                                strokeWidth={2}
+                            />
+                        </React.Fragment>
                     );
                 })}
 

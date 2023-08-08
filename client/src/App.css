@@ -1,0 +1,7 @@
+.node {
+    fill: blue;
+}
+
+.node.active-drag:hover {
+    fill: red;
+}

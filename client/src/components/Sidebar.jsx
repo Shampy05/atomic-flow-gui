@@ -23,13 +23,14 @@ const SVG_CONFIGS = [
     { component: CircleFilled, id: 'circleFilled' },
 ];
 
-const DraggableSVGItem = ({ SVGComponent, id, setDraggedId, setMovingSVG }) => (
+const DraggableSVGItem = ({ SVGComponent, id, setDraggedId, setMovingSVG, isDrawing }) => (
     <Grid item xs={6}>
         <DraggableSVG
             SVGComponent={SVGComponent}
             id={id}
             setDraggedId={setDraggedId}
             setMovingSVG={setMovingSVG}
+            isDrawing={isDrawing}
         />
     </Grid>
 )
@@ -39,7 +40,9 @@ const Sidebar = ({
                      isSidebarOpen,
                      setIsSidebarOpen,
                      setDraggedId,
-                     setMovingSVG
+                     setMovingSVG,
+    isDrawing,
+    setIsDrawing
                  }) => {
     const theme = useTheme()
 
@@ -76,6 +79,8 @@ const Sidebar = ({
                                     id={id}
                                     setDraggedId={setDraggedId}
                                     setMovingSVG={setMovingSVG}
+                                    isDrawing={isDrawing}
+                                    setIsDrawing={setIsDrawing}
                                 />
                             ))}
                         </Grid>

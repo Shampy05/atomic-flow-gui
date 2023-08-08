@@ -45,6 +45,7 @@ const Layout = () => {
     const [SVGs, setSVGs] = useState([]);
     const [draggedId, setDraggedId] = useState(null);
     const [count, setCount] = useState(0);
+    const [isDrawing, setIsDrawing] = useState(false);
 
     const handleSnapToGrid = () => {
         console.log("Snap to Grid")
@@ -96,6 +97,9 @@ const Layout = () => {
                     setSVGs={setSVGs}
                     movingSVG={movingSVG}
                     setMovingSVG={setMovingSVG}
+                    isDrawing={isDrawing}
+                    setIsDrawing={setIsDrawing}
+                    style={{ cursor: isDrawing ? 'crosshair' : 'grab' }}
                 />
             </Box>
             <Sidebar
@@ -104,6 +108,8 @@ const Layout = () => {
                 setIsSidebarOpen={setIsSidebarOpen}
                 setDraggedId={setDraggedId}
                 setMovingSVG={setMovingSVG}
+                isDrawing={isDrawing}
+                setIsDrawing={setIsDrawing}
             />
             <RightButtons
                 onSnapToGrid={handleSnapToGrid}

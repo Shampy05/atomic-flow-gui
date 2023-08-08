@@ -1,4 +1,4 @@
-
+import "./App.css";
 import { CssBaseline, ThemeProvider} from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { useSelector } from "react-redux";
@@ -7,6 +7,7 @@ import {useMemo} from "react";
 import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import Layout from "scenes/layout";
 import Canvas from "scenes/canvas";
+
 
 
 function App() {

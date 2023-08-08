@@ -1,7 +1,7 @@
 import {useDrag} from "react-dnd";
 import React from "react";
 
-const DraggableSVG = ({ SVGComponent, id, setDraggedId, setMovingSVG }) => {
+const DraggableSVG = ({ SVGComponent, id, setDraggedId, setMovingSVG, isDrawing }) => {
     const [{ isDragging }, drag] = useDrag(() => ({
         type: "svg",
         item: () => {
@@ -20,12 +20,13 @@ const DraggableSVG = ({ SVGComponent, id, setDraggedId, setMovingSVG }) => {
     return (
         <div
             ref={drag}
-            style=
-                {{opacity: isDragging
-                        ? 0.5
-                        : 1}}
+            style={{
+                opacity: isDragging ? 0.5 : 1,
+                cursor: isDrawing ? 'crosshair' : 'grab',
+                pointerEvents: isDrawing ? 'none' : 'auto',
+            }}
         >
-            <SVGComponent />
+            <SVGComponent isSidebar={true} />
         </div>
     );
 };
