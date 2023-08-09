@@ -1,6 +1,6 @@
 import SVGShape, { Path } from "./SvgShape";
 
-const DownwardCurvedLineCode = ({ selected, setLines, setIsDrawing, setStartPosition, setIsNodeClicked, svgPosition, svgId, nodeId, isSidebar }) => {
+const DownwardCurvedLineCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, setStartPosition, setIsNodeClicked, svgPosition, svgId, nodeId, allNodes, setAllNodes, isSidebar }) => {
     const shapeObj = new Path({
         d: "M 10 20 Q 25 25 40 20",
         fill: "none",
@@ -13,13 +13,17 @@ const DownwardCurvedLineCode = ({ selected, setLines, setIsDrawing, setStartPosi
             shapeObj={shapeObj}
             selected={selected}
             setLines={setLines}
+            lines={lines}
             setIsDrawing={setIsDrawing}
+            isDrawing={isDrawing}
             setStartPosition={setStartPosition}
             setIsNodeClicked={setIsNodeClicked}
             svgPosition={svgPosition}
             svgId={svgId}
-            isSidebar={isSidebar}
             nodeId={nodeId}
+            allNodes={allNodes}
+            isSidebar={isSidebar}
+            setAllNodes={setAllNodes}
         />
     );
 };

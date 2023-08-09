@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import { Box } from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
 import * as d3 from "d3";
+import { Dialog, DialogTitle, DialogContent, Button } from "@mui/material";
 
 const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, svgPosition, allNodes, setAllNodes, isDrawing }) => {
     const [isNodeClicked, setIsNodeClicked] = useState(false);
@@ -76,6 +77,8 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
     const [lineLetters, setLineLetters] = useState([]);
     const [selectedSVG, setSelectedSVG] = useState(null);
     const [allNodes, setAllNodes] = useState([]);
+    const [isLineDialogOpen, setIsLineDialogOpen] = useState(false);
+    const [selectedLineColor, setSelectedLineColor] = useState("black");
 
     const selectSVG = (id) => {
         setSelectedSVG(id);
@@ -95,6 +98,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                 x: dropOffset.x - canvasOffset.x,
                 y: dropOffset.y - canvasOffset.y
             }
+            setIsLineDialogOpen(true);
 
             if (item.onCanvas) {
                 setSVGs(prev => prev.map(svg =>
@@ -117,6 +121,17 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                             },
                         };
                     }
+                    // If the SVG being moved is connected to the end of the line
+                    if (line.endNode.svgId === item.id) {
+                        return {
+                            ...line,
+                            end: {
+                                x: position.x + (line.endNode.x * scaleX),
+                                y: position.y + (line.endNode.y * scaleY),
+                            },
+                        };
+                    }
+
                     return line;
                 }));
             } else {
@@ -187,6 +202,13 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
         };
     };
 
+    const handleColorSelect = (color) => {
+        setSelectedLineColor(color);
+        setIsLineDialogOpen(false);
+
+        // TODO: Update the line color in your state here.
+    }
+
 
     const canvasRef = useRef(null);
     drop(canvasRef)
@@ -252,10 +274,22 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                             >
                                 {lineLetters[index]?.right || ""}
                             </text>
+                            <Dialog
+                                open={isLineDialogOpen}
+                                onClose={() => setIsLineDialogOpen(false)}
+                            >
+                                <DialogTitle>Select Line Color</DialogTitle>
+                                <DialogContent>
+                                    <Button onClick={() => handleColorSelect('black')}>Black</Button>
+                                    <Button onClick={() => handleColorSelect('yellow')}>Yellow</Button>
+                                    <Button onClick={() => handleColorSelect('red')}>Red</Button>
+                                    <Button onClick={() => handleColorSelect('green')}>Green</Button>
+                                </DialogContent>
+                            </Dialog>
                             <path
                                 key={index}
                                 d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
-                                stroke="red"
+                                stroke={selectedLineColor}
                                 fill="none"
                                 strokeWidth={2}
                             />

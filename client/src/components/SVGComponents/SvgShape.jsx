@@ -73,29 +73,6 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
         }
     }
 
-    function adjustLinePositions() {
-        const svgRect = ref.current.getBoundingClientRect();
-        console.log(svgRect);
-
-        setLines(prevLines => {
-            return prevLines.map(line => {
-                if (line.startNode.svgId === svgId) {
-                    const scaleX = svgRect.width / 50;
-                    const scaleY = svgRect.height / 50;
-                    const adjustedPoint = {
-                        x: line.startNode.x * scaleX + svgRect.left,
-                        y: line.startNode.y * scaleY + svgRect.top
-                    };
-                    return {
-                        ...line,
-                        start: adjustedPoint
-                    };
-                }
-                return line;
-            });
-        });
-    }
-
     const addNodes = (index, x, y) => {
         let node = {id: nodeId[index], x, y, svgId};
 
@@ -142,6 +119,8 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
             newNodes = [...newNodes, ...addNodes(index, x, y)];
         });
         setAllNodes(prev => [...prev, ...newNodes]);
+        console.log("lines", lines)
+
     }
 
     useEffect(() => {
