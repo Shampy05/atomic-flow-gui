@@ -1,10 +1,73 @@
 import React, {useEffect, useRef, useState} from 'react';
-import { Box } from "@mui/material";
+import {Box, FormControlLabel, Radio, RadioGroup} from "@mui/material";
 import {useDrag, useDrop} from "react-dnd";
 import * as d3 from "d3";
-import { Dialog, DialogTitle, DialogContent, Button } from "@mui/material";
+import { Dialog, DialogActions, DialogTitle, DialogContent, Button, TextField } from "@mui/material";
 
-const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, svgPosition, allNodes, setAllNodes, isDrawing }) => {
+function LinePropertiesDialog({ isOpen, onClose, onSave }) {
+    const [color, setColor] = useState('');
+    const [leftText, setLeftText] = useState('');
+    const [rightText, setRightText] = useState('');
+    const [lineType, setLineType] = useState('single');  // 'single' or 'double'
+
+    const handleSave = () => {
+        onSave(color, leftText, rightText, lineType);
+        onClose();
+    };
+
+    return (
+        <Dialog open={isOpen} onClose={onClose}>
+            <DialogTitle>Choose Line Color and Text</DialogTitle>
+            <DialogContent>
+                <TextField
+                    label="Left Text"
+                    variant="outlined"
+                    value={leftText}
+                    onChange={(e) => setLeftText(e.target.value)}
+                    fullWidth
+                    margin="dense"
+                />
+                <TextField
+                    label="Right Text"
+                    variant="outlined"
+                    value={rightText}
+                    onChange={(e) => setRightText(e.target.value)}
+                    fullWidth
+                    margin="dense"
+                />
+                <div>
+                    <Button onClick={() => setColor('black')} style={{ color: 'black' }}>
+                        Black
+                    </Button>
+                    <Button onClick={() => setColor('yellow')} style={{ color: 'yellow' }}>
+                        Yellow
+                    </Button>
+                    <Button onClick={() => setColor('red')} style={{ color: 'red' }}>
+                        Red
+                    </Button>
+                    <Button onClick={() => setColor('green')} style={{ color: 'green' }}>
+                        Green
+                    </Button>
+                </div>
+                <div>
+                    <RadioGroup
+                        value={lineType}
+                        onChange={(e) => setLineType(e.target.value)}
+                    >
+                        <FormControlLabel value="single" control={<Radio />} label="Single Line" />
+                        <FormControlLabel value="double" control={<Radio />} label="Double Line" />
+                    </RadioGroup>
+                </div>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={handleSave}>Save</Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+
+const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, svgPosition, allNodes, setAllNodes, isDrawing, setIsLineDialogOpen }) => {
     const [isNodeClicked, setIsNodeClicked] = useState(false);
 
     const [{ isDragging }, drag, preview] = useDrag(() => ({
@@ -59,6 +122,7 @@ const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPos
                 lines={lines}
                 setStartPosition={setStartPosition}
                 setIsNodeClicked={setIsNodeClicked}
+                setIsLineDialogOpen={setIsLineDialogOpen}
                 svgPosition={svgPosition}
                 svgId={SVG.id}
                 nodeId={SVG.nodes.map(node => node.id)}
@@ -74,11 +138,10 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
     const [lines, setLines] = useState([]);
     const [startPosition, setStartPosition] = useState({x: 0, y: 0});
     const [connections, setConnections] = useState([]);
-    const [lineLetters, setLineLetters] = useState([]);
+    // const [lineLetters, setLineLetters] = useState([]);
     const [selectedSVG, setSelectedSVG] = useState(null);
     const [allNodes, setAllNodes] = useState([]);
     const [isLineDialogOpen, setIsLineDialogOpen] = useState(false);
-    const [selectedLineColor, setSelectedLineColor] = useState("black");
 
     const selectSVG = (id) => {
         setSelectedSVG(id);
@@ -98,7 +161,6 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                 x: dropOffset.x - canvasOffset.x,
                 y: dropOffset.y - canvasOffset.y
             }
-            setIsLineDialogOpen(true);
 
             if (item.onCanvas) {
                 setSVGs(prev => prev.map(svg =>
@@ -138,6 +200,9 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                 addSVG(item.id, position);
             }
         },
+        end: (item, monitor) => {
+            setIsLineDialogOpen(true);
+        }
     }));
 
     const handleMouseDown = (event) => {
@@ -148,8 +213,13 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
 
         setIsDrawing(true);
         const point = d3.pointer(event);
-        const nodeId = event.target.getAttribute('data-id');
-        setStartPosition({x: point[0], y: point[1]});
+        setLines(prev => [...prev, {
+            start: { x: point[0], y: point[1] },
+            end: { x: point[0], y: point[1] },
+            color: "black",
+            leftText: "",
+            rightText: ""
+        }]);
     }
 
 
@@ -173,6 +243,11 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
 
     const handleMouseUp = (event) => {
         setIsDrawing(false);
+        // only set the dialog open if the mouse is released on a node
+        if (isDrawing) {
+            setIsLineDialogOpen(true);
+        }
+
 
         // const leftLetter = prompt("Enter a letter for the left side:");
         // const rightLetter = prompt("Enter a letter for the right side:");
@@ -202,11 +277,28 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
         };
     };
 
-    const handleColorSelect = (color) => {
-        setSelectedLineColor(color);
-        setIsLineDialogOpen(false);
+    const calculateDoubleLineOffset = (start, end, offsetAmount) => {
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        return {
+            offsetX: offsetAmount * Math.sin(angle),
+            offsetY: -offsetAmount * Math.cos(angle),
+        };
+    }
 
-        // TODO: Update the line color in your state here.
+    const handleSave = (color, leftText, rightText, type) => {
+        console.log(color, leftText, rightText);
+        setLines(prev => {
+            const lines = [...prev];
+            const lastLineIndex = lines.length - 1;
+            if (lastLineIndex >= 0) {
+                lines[lastLineIndex].color = color;
+                console.log(lines[lastLineIndex].color);
+                lines[lastLineIndex].leftText = leftText;
+                lines[lastLineIndex].rightText = rightText;
+                lines[lastLineIndex].type = type;
+            }
+            return lines;
+        });
     }
 
 
@@ -237,6 +329,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                     setLines={setLines}
                     lines={lines}
                     setStartPosition={setStartPosition}
+                    setIsLineDialogOpen={setIsLineDialogOpen}
                     svgPosition={SVG.position}
                     allNodes={allNodes}
                     setAllNodes={setAllNodes}
@@ -254,45 +347,59 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                 {lines.map((line, index) => {
                     const control = calculateControlPoint(line.start, line.end);
                     const midpoint = calculateMidpoint(line.start, line.end);
+                    const angle = Math.atan2(line.end.y - line.start.y, line.end.x - line.start.x) * 180 / Math.PI;
+                    const offsetX = 15 * Math.sin(angle * Math.PI / 180);
+                    const offsetY = 15 * Math.cos(angle * Math.PI / 180);
+                    const doubleLineOffset = calculateDoubleLineOffset(line.start, line.end, 5); // 5 is the offset amount
                     return (
                         <React.Fragment key={index}>
                             <text
-                                x={midpoint.x - 10} // adjust this value to shift the letter to the left of the midpoint
-                                y={midpoint.y}
+                                x={midpoint.x - offsetX}
+                                y={midpoint.y + offsetY}
                                 fontFamily="Arial"
                                 fontSize="14"
                                 fill="black"
                             >
-                                {lineLetters[index]?.left || ""}
+                                {line.leftText}
                             </text>
                             <text
-                                x={midpoint.x + 10} // adjust this value to shift the letter to the right of the midpoint
-                                y={midpoint.y}
+                                x={midpoint.x + offsetX}
+                                y={midpoint.y - offsetY}
                                 fontFamily="Arial"
                                 fontSize="14"
                                 fill="black"
                             >
-                                {lineLetters[index]?.right || ""}
+                                {line.rightText}
                             </text>
-                            <Dialog
-                                open={isLineDialogOpen}
+                            <LinePropertiesDialog
+                                isOpen={isLineDialogOpen}
                                 onClose={() => setIsLineDialogOpen(false)}
-                            >
-                                <DialogTitle>Select Line Color</DialogTitle>
-                                <DialogContent>
-                                    <Button onClick={() => handleColorSelect('black')}>Black</Button>
-                                    <Button onClick={() => handleColorSelect('yellow')}>Yellow</Button>
-                                    <Button onClick={() => handleColorSelect('red')}>Red</Button>
-                                    <Button onClick={() => handleColorSelect('green')}>Green</Button>
-                                </DialogContent>
-                            </Dialog>
-                            <path
-                                key={index}
-                                d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
-                                stroke={selectedLineColor}
-                                fill="none"
-                                strokeWidth={2}
+                                onSave={handleSave}
                             />
+                            {line.type === 'single' ? (
+                                <path
+                                    d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
+                                    stroke={line.color}
+                                    fill="none"
+                                    strokeWidth={2}
+                                />
+                            ) : (
+                                <>
+                                    {/* Use the offset for parallel lines */}
+                                    <path
+                                        d={`M${line.start.x - doubleLineOffset.offsetX},${line.start.y - doubleLineOffset.offsetY}Q${control.x - doubleLineOffset.offsetX},${control.y - doubleLineOffset.offsetY},${line.end.x - doubleLineOffset.offsetX},${line.end.y - doubleLineOffset.offsetY}`}
+                                        stroke={line.color}
+                                        fill="none"
+                                        strokeWidth={2}
+                                    />
+                                    <path
+                                        d={`M${line.start.x + doubleLineOffset.offsetX},${line.start.y + doubleLineOffset.offsetY}Q${control.x + doubleLineOffset.offsetX},${control.y + doubleLineOffset.offsetY},${line.end.x + doubleLineOffset.offsetX},${line.end.y + doubleLineOffset.offsetY}`}
+                                        stroke={line.color}
+                                        fill="none"
+                                        strokeWidth={2}
+                                    />
+                                </>
+                            )}
                         </React.Fragment>
                     );
                 })}

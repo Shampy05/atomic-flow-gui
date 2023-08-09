@@ -2,7 +2,7 @@ import React, {useRef, useEffect, useState, useCallback} from "react";
 import * as d3 from "d3";
 import { Box } from "@mui/material";
 
-const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines, setStartPosition, setIsNodeClicked, svgPosition, nodeId, isSidebar, svgId, allNodes, setAllNodes }) => {
+const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines, setStartPosition, setIsNodeClicked, svgPosition, setIsLineDialogOpen, nodeId, isSidebar, svgId, allNodes, setAllNodes }) => {
     const ref = useRef();
     const nodeRadius = 3;
 
@@ -49,7 +49,11 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
                 start: adjustedPoint,
                 end: adjustedEnd,
                 startNode: { id: nodeId, x: node.x, y: node.y, svgId: node.svgId },
-                endNode: null
+                endNode: null,
+                color: "black",
+                leftText: "",
+                rightText: "",
+                type: "single",
             }
         ]);
     }
@@ -70,6 +74,7 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
                 return [...prevLines.slice(0, lastLineIndex), updatedLine];
             });
             setIsDrawing(false);
+            setIsLineDialogOpen((prev) => !prev);
         }
     }
 
