@@ -15,8 +15,7 @@ import {
     DownwardTriangleFilled,
     UpwardTriangleFilled,
     CircleFilled
-} from "../../components/SVGComponents";
-import circleFilledCode from "../../components/SVGComponents/CircleFilledCode";
+} from "../../components/Shapes";
 
 const SVGComponents = {
     upwardTriangle: UpwardTriangle,
@@ -43,6 +42,7 @@ const Layout = () => {
     const isNonMobile = useMediaQuery("(min-width: 600px)")
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
     const [SVGs, setSVGs] = useState([]);
+    const [lines, setLines] = useState([]);
     const [draggedId, setDraggedId] = useState(null);
     const [count, setCount] = useState(0);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -61,12 +61,25 @@ const Layout = () => {
         // Logic for zooming out goes here
     }
 
+    const onExportLatex = () => {
+        SVGs.forEach(svg => {
+            console.log("svg", svg);
+        })
+
+        lines.forEach(line => {
+            console.log(line);
+        })
+    }
+
     const addSVG = (i, position) => {
         const newSVG = {
             id: uuidv4(),
             position: position,
             component: SVGComponents[i],
             nodes: SVGNodes[i].map(node => ({ ...node, id: uuidv4(), svgPosition: position })),
+            gridCoordinates: { x: null, y: null },
+            width: 112,
+            height: 112,
         };
 
         console.log("Layout.jsx -> newSVG: ", newSVG);
@@ -99,6 +112,8 @@ const Layout = () => {
                     setMovingSVG={setMovingSVG}
                     isDrawing={isDrawing}
                     setIsDrawing={setIsDrawing}
+                    lines={lines}
+                    setLines={setLines}
                     style={{ cursor: isDrawing ? 'crosshair' : 'grab' }}
                 />
             </Box>
@@ -115,6 +130,7 @@ const Layout = () => {
                 onSnapToGrid={handleSnapToGrid}
                 onZoomIn={handleZoomIn}
                 onZoomOut={handleZoomOut}
+                onExportLatex={onExportLatex}
             />
             <Box>
                 <Navbar

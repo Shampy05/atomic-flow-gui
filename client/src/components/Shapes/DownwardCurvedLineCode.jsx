@@ -1,8 +1,8 @@
-import SVGShape, { Polygon } from "./SvgShape";
+import SVGShape, { Path } from "./SvgShape";
 
-const DownwardTriangleCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, setStartPosition, setIsNodeClicked, svgPosition, svgId, nodeId, allNodes, setAllNodes, isSidebar, setIsLineDialogOpen }) => {
-    const shapeObj = new Polygon({
-        points: "25,45 45,10 5,10",
+const DownwardCurvedLineCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, setStartPosition, svgId, nodeId, allNodes, setAllNodes, isSidebar, setIsLineDialogOpen }) => {
+    const shapeObj = new Path({
+        d: "M 10 20 Q 25 25 40 20",
         fill: "none",
         stroke: "black",
         strokeWidth: 1,
@@ -17,9 +17,7 @@ const DownwardTriangleCode = ({ selected, setLines, lines, setIsDrawing, isDrawi
             setIsDrawing={setIsDrawing}
             isDrawing={isDrawing}
             setStartPosition={setStartPosition}
-            setIsNodeClicked={setIsNodeClicked}
             setIsLineDialogOpen={setIsLineDialogOpen}
-            svgPosition={svgPosition}
             svgId={svgId}
             nodeId={nodeId}
             allNodes={allNodes}
@@ -29,4 +27,4 @@ const DownwardTriangleCode = ({ selected, setLines, lines, setIsDrawing, isDrawi
     );
 };
 
-export default DownwardTriangleCode;
+export default DownwardCurvedLineCode;

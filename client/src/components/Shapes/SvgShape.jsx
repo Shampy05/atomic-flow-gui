@@ -1,8 +1,27 @@
 import React, {useRef, useEffect, useState, useCallback} from "react";
 import * as d3 from "d3";
-import { Box } from "@mui/material";
+import { calculateMidpoint } from "../Lines/ControlPoints";
+import { v4 as uuidv4 } from "uuid";
 
-const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines, setStartPosition, setIsNodeClicked, svgPosition, setIsLineDialogOpen, nodeId, isSidebar, svgId, allNodes, setAllNodes }) => {
+
+const SVGShape =
+    ({
+                      shapeObj,
+                      selected,
+                      setIsDrawing,
+                      isDrawing,
+                      setLines,
+                      lines,
+                      setStartPosition,
+                      setIsLineDialogOpen,
+                      nodeId,
+                      isSidebar,
+                      svgId,
+                      allNodes,
+                      setAllNodes,
+         currentGridPosition,
+                      canvasDimensions
+    }) => {
     const ref = useRef();
     const nodeRadius = 3;
 
@@ -13,6 +32,7 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
         event.preventDefault(); // Prevent the default drag start event
 
         const nodeId = event.target.dataset.id;
+        const step = 100;
 
         // Get the SVG coordinates of the mousedown event
         const point = d3.pointer(event);
@@ -21,9 +41,7 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
         const svgRect = event.target.ownerSVGElement.getBoundingClientRect();
         // This is the ratio between the actual size of the SVG in pixels, and the size of viewBox.
         const scaleX = svgRect.width / 50;
-        console.log("scaleX", scaleX)
         const scaleY = svgRect.height / 50;
-        console.log("scaleY", scaleY)
 
         // adjustLinePositions();
 
@@ -37,7 +55,22 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
             y: adjustedPoint.y + 10
         };
 
-        const lineId = `line-${node.nodeId}`;
+        const lineMidpoint = calculateMidpoint(adjustedPoint, adjustedEnd);
+
+        // Convert the line's center to grid coordinates
+        const centerX = canvasDimensions.width / 2;
+        const centerY = canvasDimensions.height / 2;
+
+        const translatedX = lineMidpoint.x - centerX;
+        const translatedY = lineMidpoint.y - centerY;
+
+        const gridX = translatedX / step;
+        const gridY = -translatedY / step;
+
+        const roundedGridX = Math.round(gridX);
+        const roundedGridY = Math.round(gridY);
+
+        const lineId = uuidv4();
 
 
         setIsDrawing(true);
@@ -54,11 +87,13 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
                 leftText: "",
                 rightText: "",
                 type: "single",
+                midpoint: lineMidpoint,
+                gridCoordinates: {x: roundedGridX, y: roundedGridY}
             }
         ]);
     }
 
-    function handleMouseUp(event, node, svgElement) {
+    function handleMouseUp(event) {
         // adjustLinePositions()
         if(event.target.classList.contains("node")) {
             const releasedNodeData = {
@@ -124,8 +159,6 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
             newNodes = [...newNodes, ...addNodes(index, x, y)];
         });
         setAllNodes(prev => [...prev, ...newNodes]);
-        console.log("lines", lines)
-
     }
 
     useEffect(() => {
@@ -136,6 +169,10 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
 
         if (!isSidebar) {
             drawNode(svgElement)
+            // Set the coordinates as attributes
+            // TODO: Remove the currentGridPosition implementation
+            element.attr("data-grid-x", currentGridPosition.x);
+            element.attr("data-grid-y", currentGridPosition.y);
         }
 
         if (selected) {
@@ -143,16 +180,20 @@ const SVGShape = ({ shapeObj, selected, setIsDrawing, isDrawing, setLines, lines
             element.attr('stroke-width', 2);
         }
 
-
         // Clean up function to remove the drawn shape when the component unmounts or updates
         return () => svgElement.selectAll("*").remove();
     }, [selected]); // rerun effect when shapeObj, selected, or lines changes
 
 
     return (
-        <Box>
-            <svg ref={ref} viewBox="0 0 50 50"/>
-        </Box>
+        <>
+            <svg
+                ref={ref}
+                viewBox="0 0 50 50"
+                width="100%"
+                height="100%"
+            />
+        </>
     );
 }
 

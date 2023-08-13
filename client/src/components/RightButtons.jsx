@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Button } from "@mui/material";
 import { ZoomIn, ZoomOut, GridOn } from "@mui/icons-material";
 
-const RightButtons = ({ onSnapToGrid, onZoomIn, onZoomOut }) => {
+const RightButtons = ({ onSnapToGrid, onZoomIn, onZoomOut, onExportLatex }) => {
     return (
         <Box
             sx={{
@@ -26,6 +26,9 @@ const RightButtons = ({ onSnapToGrid, onZoomIn, onZoomOut }) => {
             </Button>
             <Button variant="contained" color="primary" onClick={onZoomOut} sx={{ width: '100px' }}>
                 <ZoomOut />
+            </Button>
+            <Button variant="contained" color="primary" onClick={onExportLatex} sx={{ width: '100px' }}>
+                Export LaTeX
             </Button>
         </Box>
     )

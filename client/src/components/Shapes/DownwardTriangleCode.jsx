@@ -1,10 +1,8 @@
-import SVGShape from "./SvgShape";
-import { Polygon } from "./SvgShape";
+import SVGShape, { Polygon } from "./SvgShape";
 
-const UpwardTriangleCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, setStartPosition, setIsNodeClicked, svgPosition, svgId, nodeId, allNodes, setAllNodes, isSidebar, setIsLineDialogOpen }) => {
-
+const DownwardTriangleCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, setStartPosition, svgId, nodeId, allNodes, setAllNodes, isSidebar, setIsLineDialogOpen }) => {
     const shapeObj = new Polygon({
-        points: "25,5 45,40 5,40",
+        points: "25,45 45,10 5,10",
         fill: "none",
         stroke: "black",
         strokeWidth: 1,
@@ -19,9 +17,7 @@ const UpwardTriangleCode = ({ selected, setLines, lines, setIsDrawing, isDrawing
             setIsDrawing={setIsDrawing}
             isDrawing={isDrawing}
             setStartPosition={setStartPosition}
-            setIsNodeClicked={setIsNodeClicked}
             setIsLineDialogOpen={setIsLineDialogOpen}
-            svgPosition={svgPosition}
             svgId={svgId}
             nodeId={nodeId}
             allNodes={allNodes}
@@ -31,4 +27,4 @@ const UpwardTriangleCode = ({ selected, setLines, lines, setIsDrawing, isDrawing
     );
 };
 
-export default UpwardTriangleCode;
+export default DownwardTriangleCode;

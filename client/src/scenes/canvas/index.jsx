@@ -1,209 +1,62 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Box, FormControlLabel, Radio, RadioGroup} from "@mui/material";
-import {useDrag, useDrop} from "react-dnd";
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Box} from "@mui/material";
 import * as d3 from "d3";
-import { Dialog, DialogActions, DialogTitle, DialogContent, Button, TextField } from "@mui/material";
+import Grid from "../grid";
+import Line from "../../components/Lines/LineComponent"
+import ShapeComponent from "../../components/Shapes/ShapeComponent";
+import useCanvasDragAndDrop from "../../utils/UseCanvasDragAndDrop";
 
-function LinePropertiesDialog({ isOpen, onClose, onSave }) {
-    const [color, setColor] = useState('');
-    const [leftText, setLeftText] = useState('');
-    const [rightText, setRightText] = useState('');
-    const [lineType, setLineType] = useState('single');  // 'single' or 'double'
-
-    const handleSave = () => {
-        onSave(color, leftText, rightText, lineType);
-        onClose();
-    };
-
-    return (
-        <Dialog open={isOpen} onClose={onClose}>
-            <DialogTitle>Choose Line Color and Text</DialogTitle>
-            <DialogContent>
-                <TextField
-                    label="Left Text"
-                    variant="outlined"
-                    value={leftText}
-                    onChange={(e) => setLeftText(e.target.value)}
-                    fullWidth
-                    margin="dense"
-                />
-                <TextField
-                    label="Right Text"
-                    variant="outlined"
-                    value={rightText}
-                    onChange={(e) => setRightText(e.target.value)}
-                    fullWidth
-                    margin="dense"
-                />
-                <div>
-                    <Button onClick={() => setColor('black')} style={{ color: 'black' }}>
-                        Black
-                    </Button>
-                    <Button onClick={() => setColor('yellow')} style={{ color: 'yellow' }}>
-                        Yellow
-                    </Button>
-                    <Button onClick={() => setColor('red')} style={{ color: 'red' }}>
-                        Red
-                    </Button>
-                    <Button onClick={() => setColor('green')} style={{ color: 'green' }}>
-                        Green
-                    </Button>
-                </div>
-                <div>
-                    <RadioGroup
-                        value={lineType}
-                        onChange={(e) => setLineType(e.target.value)}
-                    >
-                        <FormControlLabel value="single" control={<Radio />} label="Single Line" />
-                        <FormControlLabel value="double" control={<Radio />} label="Double Line" />
-                    </RadioGroup>
-                </div>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button onClick={handleSave}>Save</Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
-
-const DraggableSVGOnCanvas = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, svgPosition, allNodes, setAllNodes, isDrawing, setIsLineDialogOpen }) => {
-    const [isNodeClicked, setIsNodeClicked] = useState(false);
-
-    const [{ isDragging }, drag, preview] = useDrag(() => ({
-        type: "svg",
-        item: () => {
-            return {
-                id: SVG.id,
-                onCanvas: true,
-                oldPosition: SVG.position,
-            };
-        },
-        canDrag: () => !isNodeClicked,
-        collect: (monitor) => ({
-            isDragging: !!monitor.isDragging(),
-        }),
-    }), [isNodeClicked]);
-
-    const handleClick = (e) => {
-        e.stopPropagation(); // prevent the canvas click handler from firing
-        select(SVG.id); // select this SVG when clicked
-        setIsNodeClicked(false); // update isNodeClicked state to false
-    }
-
-    return (
-        <div
-            ref={node => {
-                drag(node);
-                preview(node);
-            }}
-            onClick={handleClick}
-            style=
-                {{
-                    opacity:
-                        isDragging
-                            ? 0
-                            : 1,
-                    position: "absolute",
-                    left: SVG.position.x,
-                    top: SVG.position.y,
-                    width: "7rem",
-                    backgroundColor: "transparent",
-                    zIndex: 1,
-                    pointerEvents: ( isDrawing ) ? "none" : "auto",
-                }}
-            className="svg-container"
-        >
-            <SVG.component
-                selected={selected || isDragging}
-                setIsDrawing={setIsDrawing}
-                isDrawing={isDrawing}
-                setLines={setLines}
-                lines={lines}
-                setStartPosition={setStartPosition}
-                setIsNodeClicked={setIsNodeClicked}
-                setIsLineDialogOpen={setIsLineDialogOpen}
-                svgPosition={svgPosition}
-                svgId={SVG.id}
-                nodeId={SVG.nodes.map(node => node.id)}
-                allNodes={allNodes}
-                setAllNodes={setAllNodes}
-            />
-        </div>
-    );
-};
-
-const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
+const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing, lines, setLines }) => {
     const svgRef = useRef();
-    const [lines, setLines] = useState([]);
+    const canvasRef = useRef(null);
     const [startPosition, setStartPosition] = useState({x: 0, y: 0});
-    const [connections, setConnections] = useState([]);
-    // const [lineLetters, setLineLetters] = useState([]);
     const [selectedSVG, setSelectedSVG] = useState(null);
     const [allNodes, setAllNodes] = useState([]);
     const [isLineDialogOpen, setIsLineDialogOpen] = useState(false);
+    const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
+
+    useEffect(() => {
+        if (canvasRef.current) {
+            setCanvasDimensions({
+                width: canvasRef.current.clientWidth,
+                height: canvasRef.current.clientHeight
+            });
+        }
+    }, []);
+
+    const handleDragEnd = useCallback(() => {
+        setIsLineDialogOpen(true);
+    }, []);
 
     const selectSVG = (id) => {
         setSelectedSVG(id);
     }
 
-    const handleCanvasClick = () => {
+    const handleCanvasClick = (event) => {
         setSelectedSVG(null);
-    }
+        const point = d3.pointer(event);
+        const step = 100
 
-    const [, drop] = useDrop(() => ({
-        accept: "svg",
-        drop: (item, monitor) => {
-            const dropOffset = monitor.getSourceClientOffset();
-            const canvasOffset = canvasRef.current.getBoundingClientRect();
+        // Adjust for center of canvas
+        const centerX = canvasDimensions.width / 2;
+        const centerY = canvasDimensions.height / 2;
 
-            const position = {
-                x: dropOffset.x - canvasOffset.x,
-                y: dropOffset.y - canvasOffset.y
-            }
+        // Subtracting half the canvas dimensions to translate the origin to the center
+        const translatedX = point[0] - centerX;
+        const translatedY = point[1] - centerY;
 
-            if (item.onCanvas) {
-                setSVGs(prev => prev.map(svg =>
-                    svg.id === item.id
-                        ? {...svg, position: position}
-                        : svg
-                ));
+        // Convert to grid coordinates based on `step`
+        const gridX = translatedX / step;
+        const gridY = -translatedY / step;  // Negative to adjust for the flipped SVG y-axis
 
-                const scaleX = 2.2399307250976563
-                const scaleY = 2.2399307250976563
+        // Round off to the nearest integer for grid coordinates
+        const roundedGridX = Math.round(gridX);
+        const roundedGridY = Math.round(gridY);
 
-                setLines(prev => prev.map(line => {
-                    if (line.startNode.svgId === item.id) {
-                        return {
-                            ...line,
-                            // make sure the line is connected to the node that was dropped
-                            start: {
-                                x: position.x + (line.startNode.x * scaleX),
-                                y: position.y + (line.startNode.y * scaleY),
-                            },
-                        };
-                    }
-                    // If the SVG being moved is connected to the end of the line
-                    if (line.endNode.svgId === item.id) {
-                        return {
-                            ...line,
-                            end: {
-                                x: position.x + (line.endNode.x * scaleX),
-                                y: position.y + (line.endNode.y * scaleY),
-                            },
-                        };
-                    }
+        // Log the coordinates
+    };
 
-                    return line;
-                }));
-            } else {
-                addSVG(item.id, position);
-            }
-        },
-        end: (item, monitor) => {
-            setIsLineDialogOpen(true);
-        }
-    }));
+    useCanvasDragAndDrop(canvasRef, addSVG, setSVGs, setLines, handleDragEnd);
 
     const handleMouseDown = (event) => {
 
@@ -239,77 +92,48 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
         });
     }
 
-
-
     const handleMouseUp = (event) => {
         setIsDrawing(false);
         // only set the dialog open if the mouse is released on a node
         if (isDrawing) {
             setIsLineDialogOpen(true);
         }
-
-
-        // const leftLetter = prompt("Enter a letter for the left side:");
-        // const rightLetter = prompt("Enter a letter for the right side:");
-        //
-        // setLineLetters(prev => [...prev, {left: leftLetter, right: rightLetter}]);
-    }
-
-    const calculateControlPoint = (start, end) => {
-        const midpoint = {
-            x: (start.x + end.x) / 2,
-            y: (start.y + end.y) / 2,
-        };
-        const length = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
-        const offset = length / 3; // adjust this value to change the curvature
-
-        // this will curve the line upward; change the sign to curve downward
-        return {
-            x: midpoint.x,
-            y: midpoint.y - offset,
-        };
-    }
-
-    const calculateMidpoint = (start, end) => {
-        return {
-            x: (start.x + end.x) / 2,
-            y: (start.y + end.y) / 2,
-        };
-    };
-
-    const calculateDoubleLineOffset = (start, end, offsetAmount) => {
-        const angle = Math.atan2(end.y - start.y, end.x - start.x);
-        return {
-            offsetX: offsetAmount * Math.sin(angle),
-            offsetY: -offsetAmount * Math.cos(angle),
-        };
-    }
-
-    const handleSave = (color, leftText, rightText, type) => {
-        console.log(color, leftText, rightText);
-        setLines(prev => {
-            const lines = [...prev];
-            const lastLineIndex = lines.length - 1;
-            if (lastLineIndex >= 0) {
-                lines[lastLineIndex].color = color;
-                console.log(lines[lastLineIndex].color);
-                lines[lastLineIndex].leftText = leftText;
-                lines[lastLineIndex].rightText = rightText;
-                lines[lastLineIndex].type = type;
-            }
-            return lines;
-        });
     }
 
 
-    const canvasRef = useRef(null);
-    drop(canvasRef)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // If it's not the delete or backspace key, do nothing
+            if (e.key !== "Delete" && e.key !== "Backspace") return;
+
+            // If no SVG is selected, do nothing
+            if (!selectedSVG) return;
+
+            // Remove SVG
+            const updatedSVGs = SVGs.filter(svg => svg.id !== selectedSVG);
+            setSVGs(updatedSVGs);
+
+            // Remove lines associated with the SVG
+            const updatedLines = lines.filter(line => line.startNode.svgId !== selectedSVG);
+            setLines(updatedLines);
+
+            // Deselect the SVG
+            setSelectedSVG(null);
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        // Cleanup event listener on unmount
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [selectedSVG, SVGs, lines]);
 
     return (
         <Box
             ref={canvasRef}
             sx={{
-                position: 'absolute',
+                position: 'relative',
                 top: 0,
                 left: 0,
                 width: '100%',
@@ -319,9 +143,29 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                 justifyContent: 'center',
             }}
         >
-            {SVGs.map((SVG, index) => (
-                <DraggableSVGOnCanvas
+            {SVGs.map((SVG, index) => {
+                const step = 100;
+                // Calculate the middle point of each SVG
+                const middleX = SVG.position.x + (SVG.width / 2);
+                const middleY = SVG.position.y + (SVG.height / 2);
+
+                // Convert the middle point to grid coordinates
+                const centerX = canvasDimensions.width / 2;
+                const centerY = canvasDimensions.height / 2;
+
+                const translatedX = middleX - centerX;
+                const translatedY = middleY - centerY;
+
+                const gridX = translatedX / step;
+                const gridY = -translatedY / step;
+
+                const roundedGridX = Math.round(gridX);
+                const roundedGridY = Math.round(gridY);
+                return (
+                    <ShapeComponent
                     SVG={SVG}
+                    setSVGs={setSVGs}
+                    gridPosition={{ x: roundedGridX, y: roundedGridY }}
                     selected={selectedSVG === SVG.id}
                     select={selectSVG}
                     setIsDrawing={setIsDrawing}
@@ -333,9 +177,12 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                     svgPosition={SVG.position}
                     allNodes={allNodes}
                     setAllNodes={setAllNodes}
+                    canvasDimensions={canvasDimensions}
                     key={`${SVG.id}-${index}`}
                 />
-            ))}
+                )
+            })}
+            <Grid height={canvasDimensions.height} width={canvasDimensions.width} />
             <svg
                 ref={svgRef}
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
@@ -344,66 +191,13 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing }) => {
                 onMouseUp={handleMouseUp}
                 onClick={handleCanvasClick}
             >
-                {lines.map((line, index) => {
-                    const control = calculateControlPoint(line.start, line.end);
-                    const midpoint = calculateMidpoint(line.start, line.end);
-                    const angle = Math.atan2(line.end.y - line.start.y, line.end.x - line.start.x) * 180 / Math.PI;
-                    const offsetX = 15 * Math.sin(angle * Math.PI / 180);
-                    const offsetY = 15 * Math.cos(angle * Math.PI / 180);
-                    const doubleLineOffset = calculateDoubleLineOffset(line.start, line.end, 5); // 5 is the offset amount
-                    return (
-                        <React.Fragment key={index}>
-                            <text
-                                x={midpoint.x - offsetX}
-                                y={midpoint.y + offsetY}
-                                fontFamily="Arial"
-                                fontSize="14"
-                                fill="black"
-                            >
-                                {line.leftText}
-                            </text>
-                            <text
-                                x={midpoint.x + offsetX}
-                                y={midpoint.y - offsetY}
-                                fontFamily="Arial"
-                                fontSize="14"
-                                fill="black"
-                            >
-                                {line.rightText}
-                            </text>
-                            <LinePropertiesDialog
-                                isOpen={isLineDialogOpen}
-                                onClose={() => setIsLineDialogOpen(false)}
-                                onSave={handleSave}
-                            />
-                            {line.type === 'single' ? (
-                                <path
-                                    d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
-                                    stroke={line.color}
-                                    fill="none"
-                                    strokeWidth={2}
-                                />
-                            ) : (
-                                <>
-                                    {/* Use the offset for parallel lines */}
-                                    <path
-                                        d={`M${line.start.x - doubleLineOffset.offsetX},${line.start.y - doubleLineOffset.offsetY}Q${control.x - doubleLineOffset.offsetX},${control.y - doubleLineOffset.offsetY},${line.end.x - doubleLineOffset.offsetX},${line.end.y - doubleLineOffset.offsetY}`}
-                                        stroke={line.color}
-                                        fill="none"
-                                        strokeWidth={2}
-                                    />
-                                    <path
-                                        d={`M${line.start.x + doubleLineOffset.offsetX},${line.start.y + doubleLineOffset.offsetY}Q${control.x + doubleLineOffset.offsetX},${control.y + doubleLineOffset.offsetY},${line.end.x + doubleLineOffset.offsetX},${line.end.y + doubleLineOffset.offsetY}`}
-                                        stroke={line.color}
-                                        fill="none"
-                                        strokeWidth={2}
-                                    />
-                                </>
-                            )}
-                        </React.Fragment>
-                    );
-                })}
 
+                <Line
+                    lines={lines}
+                    setLines={setLines}
+                    isLineDialogOpen={isLineDialogOpen}
+                    setIsLineDialogOpen={setIsLineDialogOpen}
+                />
             </svg>
         </Box>
     );

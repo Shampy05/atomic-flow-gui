@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Grid, useTheme } from "@mui/material";
-import { styled } from "@mui/system";
 import CenteredBox from "./CenteredBox";
+
 import {
     UpwardTriangle,
     DownwardTriangle,
@@ -10,7 +10,7 @@ import {
     DownwardTriangleFilled,
     UpwardTriangleFilled,
     CircleFilled
-} from "./SVGComponents";
+} from "./Shapes";
 import DraggableSVG from "./DraggableSVG";
 
 const SVG_CONFIGS = [
@@ -41,8 +41,8 @@ const Sidebar = ({
                      setIsSidebarOpen,
                      setDraggedId,
                      setMovingSVG,
-    isDrawing,
-    setIsDrawing
+                     isDrawing,
+                     setIsDrawing
                  }) => {
     const theme = useTheme()
 
@@ -70,6 +70,7 @@ const Sidebar = ({
                         open={isSidebarOpen}
                         onClose={handleClose}
                         sx={sidebarStyles}
+
                     >
                         <Grid container spacing={2}>
                             {SVG_CONFIGS.map(({ component, id }, index) => (
