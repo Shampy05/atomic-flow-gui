@@ -16,6 +16,7 @@ import {
     UpwardTriangleFilled,
     CircleFilled
 } from "../../components/Shapes";
+import ExportButton from "../../components/ExportButton";
 
 const SVGComponents = {
     upwardTriangle: UpwardTriangle,
@@ -76,6 +77,7 @@ const Layout = () => {
             id: uuidv4(),
             position: position,
             component: SVGComponents[i],
+            shapeType: i,
             nodes: SVGNodes[i].map(node => ({ ...node, id: uuidv4(), svgPosition: position })),
             gridCoordinates: { x: null, y: null },
             width: 112,
@@ -130,6 +132,8 @@ const Layout = () => {
                 onSnapToGrid={handleSnapToGrid}
                 onZoomIn={handleZoomIn}
                 onZoomOut={handleZoomOut}
+            />
+            <ExportButton
                 onExportLatex={onExportLatex}
             />
             <Box>

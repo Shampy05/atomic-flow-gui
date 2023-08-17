@@ -23,7 +23,6 @@ const ShapeComponent = ({ SVG, select, selected, setIsDrawing, setStartPosition,
         });
     }, [gridPosition]);
 
-
     const [{ isDragging }, drag, preview] = useDrag(() => ({
         type: "svg",
         item: () => {

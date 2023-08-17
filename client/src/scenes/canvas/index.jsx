@@ -30,6 +30,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing, lines, setLine
 
     const selectSVG = (id) => {
         setSelectedSVG(id);
+        console.log("SVGs", SVGs)
     }
 
     const handleCanvasClick = (event) => {

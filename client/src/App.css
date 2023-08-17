@@ -12,3 +12,10 @@
     -moz-user-select: none;
     -ms-user-select: none;
 }
+
+.export-button {
+    width: 12.5rem;
+    height: 4rem;
+    font-family: "Helvetica Neue", helvetica, arial, sans-serif;
+    font-size: 1.5rem;
+}

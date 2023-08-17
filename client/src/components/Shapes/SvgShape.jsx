@@ -81,6 +81,7 @@ const SVGShape =
                 id: lineId, // Add an id to identify the line
                 start: adjustedPoint,
                 end: adjustedEnd,
+                curvature: "",
                 startNode: { id: nodeId, x: node.x, y: node.y, svgId: node.svgId },
                 endNode: null,
                 color: "black",

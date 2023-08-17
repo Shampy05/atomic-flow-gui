@@ -3,6 +3,7 @@ import LinePropertiesDialog from "./LinePropertiesDialog";
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
+
 export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines }) => {
     const svgRef = useRef(null);
     const [controlPoints, setControlPoints] = useState({});
@@ -41,9 +42,7 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines })
         const id = circle.attr("data-id");
         const type = circle.attr("data-type");
         const newX = +circle.attr("cx") + event.dx;
-        console.log("newX", newX)
         const newY = +circle.attr("cy") + event.dy;
-        console.log("newY", newY)
 
 
         const updates = {};
@@ -73,6 +72,34 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines })
 
     }
 
+    const isStraightLine = (line, threshold = 5) => {
+        const { start, end } = line;
+        console.log("start", start)
+        console.log("end", end)
+        console.log("midpoint property", line.midpoint)
+        console.log("midpoint function", calculateMidpoint(start, end))
+
+        // Check if the line is vertical upto a threshold
+        if (Math.abs(start.x - end.x) <= threshold) {
+            return true;
+        }
+        return false;
+    };
+
+    const isLineConcave = (line, threshold = 5) => {
+        const { start, end } = line;
+
+        const midpoint = calculateMidpoint(start, end);
+        const isMidpointLeftOfStart = midpoint.x < start.x;
+        const isMidpointLeftOfEnd = midpoint.x < end.x;
+        const isMidpointRightOfStart = midpoint.x > start.x;
+        const isMidpointRightOfEnd = midpoint.x > end.x;
+
+        // TODO: Change midpoint on moving the bezier control points
+        return (isMidpointLeftOfStart && isMidpointLeftOfEnd)
+            || (isMidpointRightOfStart && isMidpointRightOfEnd);
+    }
+
 
     const updateBezier = (updatedControlPoints = controlPoints) => {
         lines.forEach(line => {
@@ -81,6 +108,7 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines })
                 control = calculateControlPoint(line.start, line.end);
                 updatedControlPoints[line.id] = control;
             }
+
             updatePath(line, control);
         });
     }
@@ -88,8 +116,6 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines })
 
     const updatePath = (line, control) => {
         if (line.type === 'single'  && control.handle1 && control.handle2) {
-            console.log("control.handle1", control.handle1)
-            console.log("control.handle2", control.handle2)
             d3.select(`#path-${line.id}`)
                 .attr("d", `M${line.start.x},${line.start.y}C${control.handle1.x},${control.handle1.y},${control.handle2.x},${control.handle2.y},${line.end.x},${line.end.y}`);
         } else {
@@ -135,16 +161,26 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines })
 
     return (
         <svg ref={svgRef} width="100%" height="100%">
-            {lines.map((line, index) => (
-                <LineFragment
+            {lines.map((line, index) => {
+                if (isStraightLine(line)) {
+                    line.curvature = "straight";
+                } else if (isLineConcave(line)) {
+                    line.curvature = "concave";
+                } else {
+                    line.curvature = "convex";
+                }
+                console.log("line.curvature", line.curvature)
+                return (
+                    <LineFragment
                     key={index}
                     line={line}
                     controlPoints={controlPoints}
                     isLineDialogOpen={isLineDialogOpen}
                     setIsLineDialogOpen={setIsLineDialogOpen}
                     handleSave={handleSave}
-                />
-            ))}
+                    />
+                )
+            })}
         </svg>
     );
 };
@@ -172,7 +208,6 @@ const LineFragment = ({ line, controlPoints, isLineDialogOpen, setIsLineDialogOp
                 data-id={line.id}
                 data-type="control"
             />
-            {console.log("handle1",handle1)}
             <circle
                 cx={handle1.x || control.x + 40}
                 cy={handle1.y || control.y + 40}
@@ -182,7 +217,6 @@ const LineFragment = ({ line, controlPoints, isLineDialogOpen, setIsLineDialogOp
                 data-id={line.id}
                 data-type="handle1"
             />
-            {console.log("handle2",handle2)}
             <circle
                 cx={handle2.x || control.x - 40}
                 cy={handle2.y || control.y - 40}
