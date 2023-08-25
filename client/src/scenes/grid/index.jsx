@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 
-const Grid = ({ width, height }) => {
-    const step = 100;  // interval for grid lines
+const Grid = ({ width, height, zoomLevel, step }) => {
 
     const grid = useMemo(() => {
         const elements = [];
@@ -26,12 +25,14 @@ const Grid = ({ width, height }) => {
         }
 
         return elements;
-    }, [width, height]);
+    }, [width, height, zoomLevel]);
 
     return (
-        <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0 }}>
-            {grid}
-        </svg>
+        <div>
+            <svg width={width} height={height}>
+                {grid}
+            </svg>
+        </div>
     );
 }
 

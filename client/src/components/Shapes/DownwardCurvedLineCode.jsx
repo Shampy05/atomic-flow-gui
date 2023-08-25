@@ -1,6 +1,7 @@
-import SVGShape, { Path } from "./SvgShape";
+import SVGShape from "./SvgShape";
+import { Path } from "./path";
 
-const DownwardCurvedLineCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, setStartPosition, svgId, nodeId, allNodes, setAllNodes, isSidebar, setIsLineDialogOpen }) => {
+const DownwardCurvedLineCode = (props) => {
     const shapeObj = new Path({
         d: "M 10 20 Q 25 25 40 20",
         fill: "none",
@@ -11,18 +12,7 @@ const DownwardCurvedLineCode = ({ selected, setLines, lines, setIsDrawing, isDra
     return (
         <SVGShape
             shapeObj={shapeObj}
-            selected={selected}
-            setLines={setLines}
-            lines={lines}
-            setIsDrawing={setIsDrawing}
-            isDrawing={isDrawing}
-            setStartPosition={setStartPosition}
-            setIsLineDialogOpen={setIsLineDialogOpen}
-            svgId={svgId}
-            nodeId={nodeId}
-            allNodes={allNodes}
-            isSidebar={isSidebar}
-            setAllNodes={setAllNodes}
+            {...props}
         />
     );
 };

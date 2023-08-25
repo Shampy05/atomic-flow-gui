@@ -29,13 +29,13 @@ const SVGComponents = {
 }
 
 const SVGNodes = {
-    upwardTriangle: [{x: 0.5, y: 0.1}, {x: 0.9, y: 0.8}, {x: 0.1, y: 0.8}],
-    downwardTriangle: [{x: 0.5, y: 0.9}, {x: 0.9, y: 0.2}, {x: 0.1, y: 0.2}],
+    upwardTriangle: [{x: 0.5, y: 0.1}, {x: 0.9, y: 0.8}, {x: 0.1, y: 0.8}, {x: 0.5, y: 0.1}],
+    downwardTriangle: [{x: 0.5, y: 0.9}, {x: 0.9, y: 0.2}, {x: 0.1, y: 0.2}, {x: 0.5, y: 0.9}],
     upwardCurvedLine: [{x: 0.2, y: 0.6}, {x: 0.8, y: 0.6}],
     downwardCurvedLine: [{x: 0.2, y: 0.4}, {x: 0.8, y: 0.4}],
-    downwardTriangleFilled: [{x: 0.5, y: 0.9}, {x: 0.9, y: 0.2}, {x: 0.1, y: 0.2}],
-    upwardTriangleFilled: [{x: 0.5, y: 0.1}, {x: 0.9, y: 0.8}, {x: 0.1, y: 0.8}],
-    circleFilled: [{x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}]
+    downwardTriangleFilled: [{x: 0.5, y: 0.9}, {x: 0.9, y: 0.2}, {x: 0.1, y: 0.2}, {x: 0.5, y: 0.9}],
+    upwardTriangleFilled: [{x: 0.5, y: 0.1}, {x: 0.9, y: 0.8}, {x: 0.1, y: 0.8}, {x: 0.5, y: 0.1}],
+    circleFilled: [{x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}, {x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}, {x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}]
 }
 
 const Layout = () => {
@@ -47,19 +47,20 @@ const Layout = () => {
     const [draggedId, setDraggedId] = useState(null);
     const [count, setCount] = useState(0);
     const [isDrawing, setIsDrawing] = useState(false);
+    const [zoomLevel, setZoomLevel] = useState(1);
+
+    const step = 100 * zoomLevel;
 
     const handleSnapToGrid = () => {
         console.log("Snap to Grid")
     }
 
     const handleZoomIn = () => {
-        console.log("Zoom In");
-        // Logic for zooming in goes here
+        setZoomLevel(prevZoom => prevZoom * 1.1);
     }
 
     const handleZoomOut = () => {
-        console.log("Zoom Out");
-        // Logic for zooming out goes here
+        setZoomLevel(prevZoom => prevZoom * 0.9);
     }
 
     const onExportLatex = () => {
@@ -78,6 +79,7 @@ const Layout = () => {
             position: position,
             component: SVGComponents[i],
             shapeType: i,
+            lines: [],
             nodes: SVGNodes[i].map(node => ({ ...node, id: uuidv4(), svgPosition: position })),
             gridCoordinates: { x: null, y: null },
             width: 112,
@@ -116,6 +118,8 @@ const Layout = () => {
                     setIsDrawing={setIsDrawing}
                     lines={lines}
                     setLines={setLines}
+                    step={step}
+                    zoomLevel={zoomLevel}
                     style={{ cursor: isDrawing ? 'crosshair' : 'grab' }}
                 />
             </Box>
@@ -135,6 +139,8 @@ const Layout = () => {
             />
             <ExportButton
                 onExportLatex={onExportLatex}
+                SVGs={SVGs}
+                lines={lines}
             />
             <Box>
                 <Navbar

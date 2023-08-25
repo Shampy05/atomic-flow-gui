@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Grid, useTheme } from "@mui/material";
+import React, { memo } from 'react';
+import { Box, Grid, useTheme, Paper, Divider } from "@mui/material";
 import CenteredBox from "./CenteredBox";
 
 import {
@@ -23,17 +23,20 @@ const SVG_CONFIGS = [
     { component: CircleFilled, id: 'circleFilled' },
 ];
 
-const DraggableSVGItem = ({ SVGComponent, id, setDraggedId, setMovingSVG, isDrawing }) => (
-    <Grid item xs={6}>
-        <DraggableSVG
-            SVGComponent={SVGComponent}
-            id={id}
-            setDraggedId={setDraggedId}
-            setMovingSVG={setMovingSVG}
-            isDrawing={isDrawing}
-        />
-    </Grid>
-)
+const DraggableSVGItem = memo(({ SVGComponent, id, setDraggedId, setMovingSVG, isDrawing }) => {
+    return (
+        <Grid item xs={6}>
+            <DraggableSVG
+                SVGComponent={SVGComponent}
+                id={id}
+                setDraggedId={setDraggedId}
+                setMovingSVG={setMovingSVG}
+                isDrawing={isDrawing}
+            />
+            <Divider light />
+        </Grid>
+    );
+});
 
 const Sidebar = ({
                      drawerWidth,
@@ -44,34 +47,36 @@ const Sidebar = ({
                      isDrawing,
                      setIsDrawing
                  }) => {
-    const theme = useTheme()
+    const theme = useTheme();
 
     const sidebarStyles = {
         width: drawerWidth,
-        height: '50vh',
-        overflow: 'auto',
+        height: '60vh',
+        overflowY: 'auto',
+        marginLeft: '1rem',
+        borderRadius: '15px',
         backgroundColor: theme.palette.background.alt,
+        transition: 'all 0.3s ease-in-out',
         '&:hover': {
-            backgroundColor: 'primary.main',
-            opacity: [0.9, 0.8, 0.7],
+            backgroundColor: theme.palette.primary.main,
+            opacity: 0.9,
         },
-    }
+    };
 
-    const handleClose = () => {
-        setIsSidebarOpen(false);
-        // other logic...
+    const handleClose = async () => {
+        try {
+            setIsSidebarOpen(false);
+            console.log('Sidebar closed successfully');
+        } catch (error) {
+            console.error('Error while closing sidebar:', error);
+        }
     };
 
     return (
         <Box component="nav">
             <CenteredBox position="fixed" top={0} left={0} bottom={0}>
                 {isSidebarOpen && (
-                    <Box
-                        open={isSidebarOpen}
-                        onClose={handleClose}
-                        sx={sidebarStyles}
-
-                    >
+                    <Paper elevation={3} sx={sidebarStyles} onClose={handleClose}>
                         <Grid container spacing={2}>
                             {SVG_CONFIGS.map(({ component, id }, index) => (
                                 <DraggableSVGItem
@@ -85,11 +90,11 @@ const Sidebar = ({
                                 />
                             ))}
                         </Grid>
-                    </Box>
+                    </Paper>
                 )}
             </CenteredBox>
         </Box>
-    )
+    );
 }
 
 export default Sidebar;

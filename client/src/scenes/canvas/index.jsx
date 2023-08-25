@@ -6,7 +6,7 @@ import Line from "../../components/Lines/LineComponent"
 import ShapeComponent from "../../components/Shapes/ShapeComponent";
 import useCanvasDragAndDrop from "../../utils/UseCanvasDragAndDrop";
 
-const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing, lines, setLines }) => {
+const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, setLines, zoomLevel }) => {
     const svgRef = useRef();
     const canvasRef = useRef(null);
     const [startPosition, setStartPosition] = useState({x: 0, y: 0});
@@ -14,6 +14,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing, lines, setLine
     const [allNodes, setAllNodes] = useState([]);
     const [isLineDialogOpen, setIsLineDialogOpen] = useState(false);
     const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
+    const [isLineDrawn, setIsLineDrawn] = useState(false);
 
     useEffect(() => {
         if (canvasRef.current) {
@@ -172,6 +173,9 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing, lines, setLine
                     setIsDrawing={setIsDrawing}
                     isDrawing={isDrawing}
                     setLines={setLines}
+                    step={step}
+                    isLineDrawn={isLineDrawn}
+                    setIsLineDrawn={setIsLineDrawn}
                     lines={lines}
                     setStartPosition={setStartPosition}
                     setIsLineDialogOpen={setIsLineDialogOpen}
@@ -183,7 +187,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing, lines, setLine
                 />
                 )
             })}
-            <Grid height={canvasDimensions.height} width={canvasDimensions.width} />
+            <Grid height={canvasDimensions.height} width={canvasDimensions.width} zoomLevel={zoomLevel} step={step}/>
             <svg
                 ref={svgRef}
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
@@ -198,6 +202,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, isDrawing, setIsDrawing, lines, setLine
                     setLines={setLines}
                     isLineDialogOpen={isLineDialogOpen}
                     setIsLineDialogOpen={setIsLineDialogOpen}
+                    setSVGs={setSVGs}
                 />
             </svg>
         </Box>

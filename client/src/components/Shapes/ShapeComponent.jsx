@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {useDrag} from "react-dnd";
 
-const ShapeComponent = ({ SVG, select, selected, setIsDrawing, setStartPosition, setLines, lines, allNodes, setSVGs, setAllNodes, isDrawing, setIsLineDialogOpen, gridPosition, canvasDimensions }) => {
+const ShapeComponent = ({ SVG, select, selected, step, isLineDrawn, setIsLineDrawn, setIsDrawing, setStartPosition, setLines, lines, allNodes, setSVGs, setAllNodes, isDrawing, setIsLineDialogOpen, gridPosition, canvasDimensions }) => {
     const [isNodeClicked, setIsNodeClicked] = useState(false);
     const [currentGridPosition, setCurrentGridPosition] = useState(SVG.gridCoordinates)
 
@@ -71,6 +71,10 @@ const ShapeComponent = ({ SVG, select, selected, setIsDrawing, setStartPosition,
                 isDrawing={isDrawing}
                 setLines={setLines}
                 lines={lines}
+                step={step}
+                isLineDrawn={isLineDrawn}
+                setIsLineDrawn={setIsLineDrawn}
+                setSVGs={setSVGs}
                 setStartPosition={setStartPosition}
                 currentGridPosition={currentGridPosition}
                 setIsLineDialogOpen={setIsLineDialogOpen}

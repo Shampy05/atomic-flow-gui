@@ -1,11 +1,11 @@
 import React from "react";
-import { exportToLatex } from "../utils/latexExport";
+import { exportToLatex } from "../latexExportLogic";
 import {Box, Button} from "@mui/material";
 
-const ExportButton = ({ onExportLatex }) => {
+const ExportButton = ({ onExportLatex, SVGs, lines }) => {
     const handleExport = () => {
-        const latexCode = exportToLatex({type: "TriangleWithTopLine"});
-        console.log(latexCode);
+        const latexCode = exportToLatex(SVGs, lines);
+        console.warn("latexCode", latexCode);
     }
 
     return (

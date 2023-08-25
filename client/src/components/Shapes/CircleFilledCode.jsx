@@ -1,6 +1,7 @@
-import SVGShape, { Circle } from "./SvgShape";
+import SVGShape from "./SvgShape";
+import { Circle } from "./circle"
 
-const CircleFilledCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, setStartPosition, svgId, nodeId, allNodes, setAllNodes, isSidebar, setIsLineDialogOpen }) => {
+const CircleFilledCode = (props) => {
     const shapeObj = new Circle({
         cx: 25,
         cy: 25,
@@ -10,23 +11,7 @@ const CircleFilledCode = ({ selected, setLines, lines, setIsDrawing, isDrawing, 
         strokeWidth: 1,
     });
 
-    return (
-        <SVGShape
-            shapeObj={shapeObj}
-            selected={selected}
-            setLines={setLines}
-            lines={lines}
-            setIsDrawing={setIsDrawing}
-            isDrawing={isDrawing}
-            setStartPosition={setStartPosition}
-            setIsLineDialogOpen={setIsLineDialogOpen}
-            svgId={svgId}
-            nodeId={nodeId}
-            allNodes={allNodes}
-            isSidebar={isSidebar}
-            setAllNodes={setAllNodes}
-        />
-    );
-};
+    return <SVGShape shapeObj={shapeObj} {...props} />;
+}
 
 export default CircleFilledCode;
