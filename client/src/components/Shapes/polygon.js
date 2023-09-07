@@ -1,6 +1,22 @@
 import { Shape } from "./shape";
 
+/**
+ * Represents a polygon. It extends the Shape class.
+ * 
+ * @class
+ * @extends Shape
+ * 
+ * @property {Object} attributes - The attributes of the polygon.
+ */
 export class Polygon extends Shape {
+    /**
+     * Draws the polygon on the SVG element. It does so by appending a polygon
+     * SVG element to the SVG element passed as an argument.
+     * 
+     * @param {Object} svgElement - The SVG element to draw the polygon on.
+     * 
+     * @returns {Object} The polygon SVG element.
+     */
     draw(svgElement) {
         return svgElement
             .append('polygon')
@@ -10,6 +26,14 @@ export class Polygon extends Shape {
             .attr('stroke-width', this.attributes.strokeWidth || 1);
     }
 
+    /**
+     * Returns the nodes of the polygon. The nodes are the points that can be
+     * dragged to draw an arc. For a polygon, the nodes are the top, top-left,
+     * top-right, bottom, bottom-left, and bottom-right points. They are
+     * calculated using the points attribute of the polygon.
+     * 
+     * @returns {Array} The nodes of the polygon.
+     */
     get nodes() {
         const points = this.attributes.points.split(" ");
         const parsedPoints = points.map(point => {

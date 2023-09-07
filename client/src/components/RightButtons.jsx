@@ -2,6 +2,16 @@ import React from 'react';
 import { Box, Button } from "@mui/material";
 import { ZoomIn, ZoomOut, GridOn } from "@mui/icons-material";
 
+/**
+ * RightButtons component containing the snap to grid, zoom in, and zoom out buttons.
+ * 
+ * @param {object} props
+ * @param {function} props.onSnapToGrid - Function to snap to grid
+ * @param {function} props.onZoomIn - Function to zoom in
+ * @param {function} props.onZoomOut - Function to zoom out
+ * 
+ * @returns {JSX.Element} RightButtons
+ */
 const RightButtons = ({ onSnapToGrid, onZoomIn, onZoomOut }) => {
     return (
         <Box

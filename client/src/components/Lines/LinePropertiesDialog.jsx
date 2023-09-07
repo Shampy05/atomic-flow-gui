@@ -10,12 +10,29 @@ import {
     TextField
 } from "@mui/material";
 
+/**
+ * Dialog for choosing line properties (color, text, etc.). 
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Whether the dialog is open
+ * @param {function} props.onClose - Callback for when the dialog is closed
+ * @param {function} props.onSave - Callback for when the dialog is saved
+ * 
+ * @returns {JSX.Element} LinePropertiesDialog
+ */
 function LinePropertiesDialog({ isOpen, onClose, onSave }) {
     const [color, setColor] = useState('');
     const [leftText, setLeftText] = useState('');
     const [rightText, setRightText] = useState('');
     const [lineType, setLineType] = useState('single');  // 'single' or 'double'
 
+    /**
+     * Callback for when the save button is clicked. Calls the onSave callback
+     * with the current line properties.
+     * 
+     * @returns {void}
+     * 
+     */
     const handleSave = () => {
         onSave(color, leftText, rightText, lineType);
         onClose();

@@ -1,12 +1,21 @@
 import { NODE_TYPES, SHAPE_TYPES } from "../constants";
 
+/**
+ * @function upwardTriangleLogic
+ * This function returns the shape type of the upward triangle based on the
+ * connected lines. If the upward triangle is not connected to any line, it
+ * returns the default upward triangle shape type. The shape type is used to
+ * determine the shape of the upward triangle.
+ * 
+ * @param {Object} SVG - SVG object
+ * @param {Array} connectedLines - array of connected line objects
+ * 
+ * @returns {string} The shape type of the upward triangle.
+ */
 export const upwardTriangleLogic = (SVG, connectedLines) => {
     let lineFromTopNode, lineFromBottomLeftNode, lineFromBottomRightNode, lineFromBottomNode;
 
     connectedLines.forEach(line => {
-        console.log('line', line);
-        console.log('line.startNode', line.startNode);
-        console.log('line.endNode', line.endNode);
         if (line.startNode || line.endNode) {
             if ((line.startNode && line.startNode.type === NODE_TYPES.TOP) || (line.endNode && line.endNode.type === NODE_TYPES.TOP)) {
                 lineFromTopNode = line;
@@ -20,9 +29,7 @@ export const upwardTriangleLogic = (SVG, connectedLines) => {
         }
     });
 
-    console.log('lineFromTopNode', lineFromTopNode);
-
-    if (lineFromTopNode && lineFromTopNode.curvature === "straight") {
+    if (lineFromTopNode) {
         if (lineFromBottomLeftNode && lineFromBottomRightNode) {
             return 'upwardTriangleWithThreeLines';
         } else {

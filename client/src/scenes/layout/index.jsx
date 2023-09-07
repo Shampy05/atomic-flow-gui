@@ -1,4 +1,4 @@
-import React,{ useState } from 'react';
+import React,{ useState, useEffect } from 'react';
 import { Box, useMediaQuery } from "@mui/material";
 import { Outlet } from "react-router-dom"
 import Navbar from "components/Navbar";
@@ -18,6 +18,9 @@ import {
 } from "../../components/Shapes";
 import ExportButton from "../../components/ExportButton";
 
+/**
+ * SVGComponents is an object containing the SVG components.
+ */
 const SVGComponents = {
     upwardTriangle: UpwardTriangle,
     downwardTriangle: DownwardTriangle,
@@ -28,6 +31,9 @@ const SVGComponents = {
     circleFilled: CircleFilled
 }
 
+/**
+ * SVGNodes is an object containing the nodes of the SVGs and their relative positions.
+ */
 const SVGNodes = {
     upwardTriangle: [{x: 0.5, y: 0.1}, {x: 0.9, y: 0.8}, {x: 0.1, y: 0.8}, {x: 0.5, y: 0.1}],
     downwardTriangle: [{x: 0.5, y: 0.9}, {x: 0.9, y: 0.2}, {x: 0.1, y: 0.2}, {x: 0.5, y: 0.9}],
@@ -38,6 +44,12 @@ const SVGNodes = {
     circleFilled: [{x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}, {x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}, {x: 0.5, y: 0.1}, {x: 0.5, y: 0.9}]
 }
 
+/**
+ * Layout component. It is used to render the canvas, sidebar, and navbar. It is also used to
+ * handle the zoom functionality of the canvas. 
+ * 
+ * @returns {JSX.Element} Layout
+ */
 const Layout = () => {
     const [movingSVG, setMovingSVG] = useState(null);
     const isNonMobile = useMediaQuery("(min-width: 600px)")
@@ -51,18 +63,65 @@ const Layout = () => {
 
     const step = 100 * zoomLevel;
 
+    // const saveCanvasState = () => {
+    //     const canvasState = {
+    //         SVGs: SVGs,
+    //         lines: lines
+    //     };
+    //     console.warn("canvasState", canvasState);
+    //     window.localStorage.setItem('canvasState', JSON.stringify(canvasState));
+    //     console.warn("size of local storage", JSON.stringify(localStorage).length)
+    // };
+
+    // const loadCanvasState = () => {
+    //     const savedCanvasState = localStorage.getItem('canvasState');
+    //     if (savedCanvasState) {
+    //         const parsedState = JSON.parse(savedCanvasState);
+    //         setSVGs(parsedState.SVGs || []);
+    //         setLines(parsedState.lines || []);
+    //     }
+    // };
+    
+    // useEffect(() => {
+    //     saveCanvasState();
+    // }, [SVGs, lines]);
+    
+    // useEffect(() => {
+    //     if (SVGs.length === 0 && lines.length === 0) {
+    //         loadCanvasState();
+    //     }
+    // }, []);
+    
+    
+
+    /**
+     * Handle the snap to grid functionality of the canvas. This function is called when the
+     * user clicks the "Snap to Grid" button.
+     */
     const handleSnapToGrid = () => {
         console.log("Snap to Grid")
     }
 
+    /**
+     * Handle the zoom in functionality of the canvas. This function is called when the
+     * user clicks the "Zoom In" button.
+     */
     const handleZoomIn = () => {
         setZoomLevel(prevZoom => prevZoom * 1.1);
     }
 
+    /**
+     * Handle the zoom out functionality of the canvas. This function is called when the
+     * user clicks the "Zoom Out" button.
+     */
     const handleZoomOut = () => {
         setZoomLevel(prevZoom => prevZoom * 0.9);
     }
 
+    /**
+     * Handle the export to LaTeX functionality of the canvas. This function is called when the
+     * user clicks the "Export to LaTeX" button.
+     */
     const onExportLatex = () => {
         SVGs.forEach(svg => {
             console.log("svg", svg);
@@ -73,6 +132,15 @@ const Layout = () => {
         })
     }
 
+    /**
+     * Add an SVG to the canvas. This function is called when the user clicks on an SVG in the
+     * sidebar. 
+     * 
+     * @param {number} i - The index of the SVG in the SVGComponents array.
+     * @param {object} position - The position of the SVG on the canvas.
+     * 
+     * @returns {void}
+     */
     const addSVG = (i, position) => {
         const newSVG = {
             id: uuidv4(),
@@ -91,6 +159,7 @@ const Layout = () => {
         setSVGs((SVGs) => [...SVGs, newSVG]);
         setCount(count + 1);
     };
+    
 
     return (
         <Box
@@ -124,7 +193,7 @@ const Layout = () => {
                 />
             </Box>
             <Sidebar
-                drawerWidth="250px"
+                drawerWidth="6rem"
                 isSidebarOpen={isSidebarOpen}
                 setIsSidebarOpen={setIsSidebarOpen}
                 setDraggedId={setDraggedId}

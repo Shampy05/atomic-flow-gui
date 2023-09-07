@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: components/Lines/LineComponent.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: components/Lines/LineComponent.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { calculateMidpoint, calculateControlPoint, calculateDoubleLineOffset, calculateLineGridCoordinates } from "./ControlPoints";
+import LinePropertiesDialog from "./LinePropertiesDialog";
+import React, { useEffect, useRef, useState } from "react";
+import * as d3 from "d3";
+
+/**
+ * Component representing a draggable line with control points and handles to adjust the curve
+ * 
+ * @param {Object} props
+ * @param {Array} props.lines - Array of line objects
+ * @param {Boolean} props.isLineDialogOpen - Boolean to indicate if the line properties dialog is open
+ * @param {Function} props.setIsLineDialogOpen - Function to set the isLineDialogOpen state
+ * @param {Function} props.setLines - Function to set the lines state
+ * @param {Object} props.canvasDimensions - Object containing the width and height of the canvas
+ * 
+ * @returns {React.Component}
+ */
+export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, canvasDimensions}) => {
+    const svgRef = useRef(null);
+    const [controlPoints, setControlPoints] = useState({});
+
+    /**
+     * Function to handle saving the line properties
+     * 
+     * @param {String} color - Color of the line
+     * @param {String} leftText - Text to display on the left side of the line
+     * @param {String} rightText - Text to display on the right side of the line
+     * @param {String} type - Type of line (single or double)
+     *
+     * @returns {void}
+     */
+    const handleSave = (color, leftText, rightText, type) => {
+        setLines(prev => prev.map((line, index) => index === prev.length - 1 ? { ...line, color, leftText, rightText, type } : line));
+    }
+
+    /**
+     * Function to attach drag behavior to the control points and handles
+     * 
+     * @returns {void}
+     */
+    const attachDragBehavior = () => {
+        const drag = d3.drag().on("drag", function (event) { handleDrag(event, this) });
+        d3.selectAll("circle").call(drag);
+    };
+
+    /**
+     * Function to handle dragging of the control points and handles
+     * 
+     * @param {Object} event - D3 drag event
+     * @param {Object} element - D3 element being dragged
+     * 
+     * @returns {void}
+     */
+    const handleDrag = async (event, element) => {
+        const circle = d3.select(element);
+        const id = circle.attr("data-id");
+        const type = circle.attr("data-type");
+        const newX = +circle.attr("cx") + event.dx;
+        const newY = +circle.attr("cy") + event.dy;
+
+        let updates;
+        if (type === "control") {
+            updates = { [id]: { ...controlPoints[id], x: newX, y: newY } };
+        } else if (["handle1", "handle2"].includes(type)) {
+            updates = { [id]: { ...controlPoints[id], [type]: { x: newX, y: newY } } };
+        }
+
+        if (updates) {
+            await setControlPoints(prev => ({ ...prev, ...updates }));
+            updateBezier();
+            circle.attr("cx", newX).attr("cy", newY);
+        }
+    };
+
+    /**
+     * Function to calculate the distance between a point and a line
+     * 
+     * @param {Object} point - Point object containing x and y coordinates
+     * @param {Object} lineStart - Point object containing x and y coordinates of the start of the line
+     * @param {Object} lineEnd - Point object containing x and y coordinates of the end of the line
+     * 
+     * @returns {Number} - Distance between the point and the line
+     */
+    const distanceFromLine = (point, lineStart, lineEnd) => {
+        const { x: x1, y: y1 } = lineStart;
+        const { x: x2, y: y2 } = lineEnd;
+        const { x, y } = point;
+
+        return Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) /
+            Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
+    };
+
+    /**
+     * Function to check if a line is straight
+     * 
+     * @param {Object} line - Line object
+     * @param {Number} threshold - Threshold to determine if a line is straight
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is straight
+     */
+    const isStraightLine = (line, threshold = 5) => {  // default threshold of 5 units
+        const control = controlPoints[line.id] || calculateControlPoint(line.start, line.end);
+        const distance = distanceFromLine(control, line.start, line.end);
+
+        return distance &lt;= threshold;
+    };
+
+    /**
+     * Function to check if a line is bulging left or right
+     * 
+     * @param {Object} start - Point object containing x and y coordinates of the start of the line
+     * @param {Object} end - Point object containing x and y coordinates of the end of the line
+     * @param {Object} control - Point object containing x and y coordinates of the control point
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is bulging left or right
+     */
+    const isLineBulgingLeft = (start, end, control) => {
+        return control.x &lt; start.x &amp;&amp; control.x &lt; end.x;
+    };
+
+    /**
+     * Function to check if a line is bulging left or right
+     * 
+     * @param {Object} start - Point object containing x and y coordinates of the start of the line
+     * @param {Object} end - Point object containing x and y coordinates of the end of the line
+     * @param {Object} control - Point object containing x and y coordinates of the control point
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is bulging left or right
+     */
+    const isLineBulgingRight = (start, end, control) => {
+        return control.x > start.x &amp;&amp; control.x > end.x;
+    };
+
+    /**
+     * Function to calculate the signed area of a triangle. Used to determine if a line is an S-curve. 
+     * 
+     * @param {Object} p1 - Point object containing x and y coordinates of the first point
+     * @param {Object} p2 - Point object containing x and y coordinates of the second point
+     * @param {Object} p3 - Point object containing x and y coordinates of the third point
+     * 
+     * @returns {Number} - Signed area of the triangle
+     */
+    const signedArea = (p1, p2, p3) => {
+        return (p1.x * (p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y)) / 2;
+    };
+
+    /**
+     * Function to calculate the distance between two points. 
+     * 
+     * @param {Object} p1 - Point object containing x and y coordinates of the first point
+     * @param {Object} p2 - Point object containing x and y coordinates of the second point
+     * 
+     * @returns {Number} - Distance between the two points
+     */
+    const distance = (p1, p2) => {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    };
+
+    /**
+     * Function to check if a line is an S-curve. If one control point is closer to the start and the other is closer to the end
+     * and they have opposite signed areas (heights), then the line is an S-curve.
+     * 
+     * @param {Object} start - Point object containing x and y coordinates of the start of the line
+     * @param {Object} end - Point object containing x and y coordinates of the end of the line
+     * @param {Object} handle1 - Point object containing x and y coordinates of the first control point
+     * @param {Object} handle2 - Point object containing x and y coordinates of the second control point
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is an S-curve
+     */
+    const isSCurve = (start, end, handle1, handle2) => {
+        const area1 = signedArea(start, end, handle1);
+        const area2 = signedArea(start, end, handle2);
+
+        const distanceStartToHandle1 = distance(start, handle1);
+        const distanceStartToHandle2 = distance(start, handle2);
+
+        return (
+            ((distanceStartToHandle1 &lt; distanceStartToHandle2) &amp;&amp; (area1 > 0 &amp;&amp; area2 &lt; 0)) ||
+            ((distanceStartToHandle2 &lt; distanceStartToHandle1) &amp;&amp; (area2 > 0 &amp;&amp; area1 &lt; 0))
+        );
+    };
+
+    const isInvertedSCurve = (start, end, handle1, handle2) => {
+        return !isSCurve(start, end, handle1, handle2);
+    };
+
+
+    /**
+     * Function to update the bezier curve of a line. If no control points are passed in, the control points will be calculated.
+     * 
+     * @param {Object} updatedControlPoints - Object containing the control points for each line
+     * 
+     * @returns {void}
+     */
+    const updateBezier = (updatedControlPoints = controlPoints) => {
+        lines.forEach(line => {
+            let control = updatedControlPoints[line.id];
+            if (!control) {
+                control = calculateControlPoint(line.start, line.end);
+                updatedControlPoints[line.id] = control;
+            }
+
+            line.midpoint = calculateMidpoint(line.start, line.end);
+            if (isStraightLine(line)) {
+                line.curvature = "straight";
+            } else if (control.handle1 &amp;&amp; control.handle2 &amp;&amp; isSCurve(line.start, line.end, control.handle1, control.handle2)) {
+                line.curvature = "s-curve";
+            } else if (control.handle1 &amp;&amp; control.handle2 &amp;&amp; isInvertedSCurve(line.start, line.end, control.handle1, control.handle2)) {
+                line.curvature = "inverted-s-curve";
+            } else if (isLineBulgingLeft(line.start, line.end, control)) {
+                line.curvature = "left-bulge";
+            } else if (isLineBulgingRight(line.start, line.end, control)) {
+                line.curvature = "right-bulge";
+            } else {
+                line.curvature = "curved";
+            }
+
+            updatePath(line, control);
+        });
+    }
+
+    /**
+     * Function to update the path of a line. If the line is a double line, two paths will be updated.
+     * 
+     * @param {Object} line - Line object
+     * @param {Object} control - Control point object
+     * 
+     * @returns {void}
+     */
+    const updatePath = (line, control) => {
+        if (line.type === 'single'  &amp;&amp; control.handle1 &amp;&amp; control.handle2) {
+            d3.select(`#path-${line.id}`)
+                .attr("d", `M${line.start.x},${line.start.y}C${control.handle1.x},${control.handle1.y},${control.handle2.x},${control.handle2.y},${line.end.x},${line.end.y}`);
+        } else {
+            const doubleLineOffset = calculateDoubleLineOffset(line.start, line.end, 5);
+            d3.select(`#path-${line.id}-1`)
+                .attr("d", getPathWithOffset(line, control, -doubleLineOffset.offsetX, -doubleLineOffset.offsetY));
+            d3.select(`#path-${line.id}-2`)
+                .attr("d", getPathWithOffset(line, control, doubleLineOffset.offsetX, doubleLineOffset.offsetY));
+        }
+    }
+
+    /**
+     * Function to get the path of a line with an offset. Used for double lines.
+     * 
+     * @param {Object} line - Line object
+     * @param {Object} control - Control point object
+     * @param {Number} offsetX - X offset
+     * @param {Number} offsetY - Y offset
+     * 
+     * @returns {String} - Path of the line with the offset
+     */
+    const getPathWithOffset = (line, control, offsetX, offsetY) => {
+        return `M${line.start.x + offsetX},${line.start.y + offsetY}Q${control.x + offsetX},${control.y + offsetY},${line.end.x + offsetX},${line.end.y + offsetY}`;
+    }
+
+    /**
+     * Function to update the control points and handles when the lines change
+     * 
+     * @returns {void}
+     */
+    useEffect(() => {
+        attachDragBehavior();
+    }, [lines, controlPoints]);
+
+
+    /**
+     * Function to initialize the control points when the component mounts
+     * 
+     * @returns {void}
+     */
+    useEffect(() => {
+        initializeControlPoints();
+    }, []);
+
+    /**
+     * Function to initialize the control points for each line. If the control point does not exist, it will be calculated.
+     * 
+     * @returns {void}
+     */
+    const initializeControlPoints = () => {
+        const newControlPoints = { ...controlPoints };
+        lines.forEach(line => {
+            if (!controlPoints[line.id]) {
+                let control = calculateControlPoint(line.start, line.end);
+
+                // Check for top-left and top-right data-types and adjust control points
+                if (line.startNode['data-type'] === "top-left" || line.start['data-type'] === "top-right") {
+                    control.x += (control.x - line.start.x) * 2;
+                    control.y += (control.y - line.start.y) * 2;
+                }
+
+                const handle1 = { x: control.x - 40, y: control.y - 40 };
+                const handle2 = { x: control.x + 40, y: control.y + 40 };
+                newControlPoints[line.id] = { ...control, handle1, handle2 };  // initialize with handle1 and handle2
+            }
+        });
+        setControlPoints(newControlPoints);
+        updateBezier(newControlPoints);
+    }
+
+
+    /**
+     * Function to update the bezier curves when the control points change. 
+     * 
+     * @returns {void}
+     */
+    useEffect(() => {
+        updateBezier();
+    }, [controlPoints]);
+
+    return (
+        &lt;svg ref={svgRef} width="100%" height="100%">
+            {lines.map((line, index) => {
+                if (isStraightLine(line)) {
+                    line.curvature = "straight";
+                } else {
+                    line.curvature = "curved";
+                }
+                line.gridCoordinates = calculateLineGridCoordinates(line, canvasDimensions);
+                console.warn("line.gridCoordinates", line.gridCoordinates)
+                return (
+                    &lt;LineFragment
+                        key={index}
+                        line={line}
+                        controlPoints={controlPoints}
+                        isLineDialogOpen={isLineDialogOpen}
+                        setIsLineDialogOpen={setIsLineDialogOpen}
+                        handleSave={handleSave}
+                    />
+                )
+            })}
+        &lt;/svg>
+    );
+};
+
+/**
+ * Component representing a line with control points and handles to adjust the curve.
+ * This component is used to render the line and the control points and handles.
+ * 
+ * @param {Object} props
+ * @param {Object} props.line - Line object
+ * @param {Object} props.controlPoints - Object containing the control points for each line
+ * @param {Boolean} props.isLineDialogOpen - Boolean to indicate if the line properties dialog is open
+ * @param {Function} props.setIsLineDialogOpen - Function to set the isLineDialogOpen state
+ * @param {Function} props.handleSave - Function to handle saving the line properties
+ * 
+ * @returns {React.Component}
+ */
+const LineFragment = ({ line, controlPoints, isLineDialogOpen, setIsLineDialogOpen, handleSave }) => {
+    let control = controlPoints[line.id];
+    if (!control) {
+        control = calculateControlPoint(line.start, line.end);
+    }
+    const { handle1 = { x: control.x + 40, y: control.y + 40 }, handle2 = { x: control.x - 40, y: control.y - 40 } } = control;
+    const midpoint = calculateMidpoint(line.start, line.end);
+    const angle = Math.atan2(line.end.y - line.start.y, line.end.x - line.start.x) * 180 / Math.PI;
+    const offsetX = 15 * Math.sin(angle * Math.PI / 180);
+    const offsetY = 15 * Math.cos(angle * Math.PI / 180);
+    const doubleLineOffset = calculateDoubleLineOffset(line.start, line.end, 5);
+
+    return (
+        &lt;React.Fragment>
+            &lt;circle
+                cx={control.x}
+                cy={control.y}
+                r={5}
+                fill="red"
+                cursor="pointer"
+                data-id={line.id}
+                data-type="control"
+            />
+            &lt;circle
+                cx={handle1.x || control.x + 40}
+                cy={handle1.y || control.y + 40}
+                r={3}
+                fill="pink"
+                cursor="pointer"
+                data-id={line.id}
+                data-type="handle1"
+            />
+            &lt;circle
+                cx={handle2.x || control.x - 40}
+                cy={handle2.y || control.y - 40}
+                r={3}
+                fill="green"
+                cursor="pointer"
+                data-id={line.id}
+                data-type="handle2"
+            />
+
+            &lt;line x1={control.x} y1={control.y} x2={handle1.x} y2={handle1.y} stroke="grey" />
+            &lt;line x1={control.x} y1={control.y} x2={handle2.x} y2={handle2.y} stroke="grey" />
+
+            &lt;text x={midpoint.x - offsetX} y={midpoint.y + offsetY} fontFamily="Arial" fontSize="14" fill="black">
+                {line.leftText}
+            &lt;/text>
+            &lt;text x={midpoint.x + offsetX} y={midpoint.y - offsetY} fontFamily="Arial" fontSize="14" fill="black">
+                {line.rightText}
+            &lt;/text>
+            &lt;LinePropertiesDialog
+                isOpen={isLineDialogOpen}
+                onClose={() => setIsLineDialogOpen(false)}
+                onSave={handleSave}
+            />
+            {line.type === 'single' ? (
+                &lt;path
+                    id={`path-${line.id}`}
+                    d={`M${line.start.x},${line.start.y}Q${control.x},${control.y},${line.end.x},${line.end.y}`}
+                    stroke={line.color}
+                    fill="none"
+                    strokeWidth={2}
+                />
+            ) : (
+                &lt;>
+                    &lt;path
+                        id={`path-${line.id}-1`}
+                        d={`M${line.start.x - doubleLineOffset.offsetX},${line.start.y - doubleLineOffset.offsetY}Q${control.x - doubleLineOffset.offsetX},${control.y - doubleLineOffset.offsetY},${line.end.x - doubleLineOffset.offsetX},${line.end.y - doubleLineOffset.offsetY}`}
+                        stroke={line.color}
+                        fill="none"
+                        strokeWidth={2}
+                    />
+                    &lt;path
+                        id={`path-${line.id}-2`}
+                        d={`M${line.start.x + doubleLineOffset.offsetX},${line.start.y + doubleLineOffset.offsetY}Q${control.x + doubleLineOffset.offsetX},${control.y + doubleLineOffset.offsetY},${line.end.x + doubleLineOffset.offsetX},${line.end.y + doubleLineOffset.offsetY}`}
+                        stroke={line.color}
+                        fill="none"
+                        strokeWidth={2}
+                    />
+                &lt;/>
+            )}
+        &lt;/React.Fragment>
+    );
+}
+
+export default Line;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Circle.html">Circle</a></li><li><a href="Circle_Shape.html">Shape</a></li><li><a href="Path.html">Path</a></li><li><a href="Path_Shape.html">Shape</a></li><li><a href="Polygon.html">Polygon</a></li><li><a href="Polygon_Shape.html">Shape</a></li><li><a href="Shape.html">Shape</a></li><li><a href="Shape_Shape.html">Shape</a></li></ul><h3>Global</h3><ul><li><a href="global.html#App">App</a></li><li><a href="global.html#Canvas">Canvas</a></li><li><a href="global.html#CenteredBox">CenteredBox</a></li><li><a href="global.html#CircleFilledCode">CircleFilledCode</a></li><li><a href="global.html#DEFAULT_COLOR">DEFAULT_COLOR</a></li><li><a href="global.html#DownwardCurvedLineCode">DownwardCurvedLineCode</a></li><li><a href="global.html#DownwardTriangleCode">DownwardTriangleCode</a></li><li><a href="global.html#DownwardTriangleFilledCode">DownwardTriangleFilledCode</a></li><li><a href="global.html#DraggableSVG">DraggableSVG</a></li><li><a href="global.html#DraggableSVGItem">DraggableSVGItem</a></li><li><a href="global.html#ExportButton">ExportButton</a></li><li><a href="global.html#FlexBetween">FlexBetween</a></li><li><a href="global.html#Grid">Grid</a></li><li><a href="global.html#KNOWN_COLORS">KNOWN_COLORS</a></li><li><a href="global.html#LATEX_MAP_CIRCLE">LATEX_MAP_CIRCLE</a></li><li><a href="global.html#LATEX_MAP_DOWNWARD_CURVED_LINE">LATEX_MAP_DOWNWARD_CURVED_LINE</a></li><li><a href="global.html#LATEX_MAP_DOWNWARD_TRIANGLE">LATEX_MAP_DOWNWARD_TRIANGLE</a></li><li><a href="global.html#LATEX_MAP_DOWNWARD_TRIANGLE_FILLED">LATEX_MAP_DOWNWARD_TRIANGLE_FILLED</a></li><li><a href="global.html#LATEX_MAP_INVERTED_S_CURVE">LATEX_MAP_INVERTED_S_CURVE</a></li><li><a href="global.html#LATEX_MAP_LEFT_BULGE">LATEX_MAP_LEFT_BULGE</a></li><li><a href="global.html#LATEX_MAP_RIGHT_BULGE">LATEX_MAP_RIGHT_BULGE</a></li><li><a href="global.html#LATEX_MAP_S_CURVE">LATEX_MAP_S_CURVE</a></li><li><a href="global.html#LATEX_MAP_UPWARD_CURVED_LINE">LATEX_MAP_UPWARD_CURVED_LINE</a></li><li><a href="global.html#LATEX_MAP_UPWARD_TRIANGLE">LATEX_MAP_UPWARD_TRIANGLE</a></li><li><a href="global.html#LATEX_MAP_UPWARD_TRIANGLE_FILLED">LATEX_MAP_UPWARD_TRIANGLE_FILLED</a></li><li><a href="global.html#Layout">Layout</a></li><li><a href="global.html#Line">Line</a></li><li><a href="global.html#LineFragment">LineFragment</a></li><li><a href="global.html#LinePropertiesDialog">LinePropertiesDialog</a></li><li><a href="global.html#NODE_TYPES">NODE_TYPES</a></li><li><a href="global.html#Navbar">Navbar</a></li><li><a href="global.html#RightButtons">RightButtons</a></li><li><a href="global.html#SCurveLogicThisfunctiondeterminestheshapeofthearcforanSCurve.">SCurveLogic
+This function determines the shape of the arc for an S Curve.</a></li><li><a href="global.html#SHAPE_TYPES">SHAPE_TYPES</a></li><li><a href="global.html#SVGComponents">SVGComponents</a></li><li><a href="global.html#SVGNodes">SVGNodes</a></li><li><a href="global.html#SVGShape">SVGShape</a></li><li><a href="global.html#SVG_CONFIGS">SVG_CONFIGS</a></li><li><a href="global.html#SVG_VARIATION_LOGIC">SVG_VARIATION_LOGIC</a></li><li><a href="global.html#ShapeComponent">ShapeComponent</a></li><li><a href="global.html#Sidebar">Sidebar</a></li><li><a href="global.html#UpwardCurvedLineCode">UpwardCurvedLineCode</a></li><li><a href="global.html#UpwardTriangle">UpwardTriangle</a></li><li><a href="global.html#UpwardTriangleCode">UpwardTriangleCode</a></li><li><a href="global.html#UpwardTriangleFilledCode">UpwardTriangleFilledCode</a></li><li><a href="global.html#adjustLatexCommandForLineTypeThisfunctionadjuststheLaTeXcommandforthelinetype.Ifthelinetypeisdouble,itwillcapitalizethefirstletterofthecommand.">adjustLatexCommandForLineType
+This function adjusts the LaTeX command for the line type. If the line type
+is double, it will capitalize the first letter of the command.</a></li><li><a href="global.html#buildLatexForShapeThisfunctionreturnstheLaTeXcommandfortheshapebasedontheshapetypeandconnectedlines.Iftheshapetypeisnotfound,itreturnsanemptystring.TheLaTeXcommandisusedtorendertheshapeinLaTeX.">buildLatexForShape
+This function returns the LaTeX command for the shape based on the shape type
+and connected lines. If the shape type is not found, it returns an empty
+string. The LaTeX command is used to render the shape in LaTeX.</a></li><li><a href="global.html#calculateControlPoint">calculateControlPoint</a></li><li><a href="global.html#calculateDoubleLineOffset">calculateDoubleLineOffset</a></li><li><a href="global.html#calculateLineGridCoordinates">calculateLineGridCoordinates</a></li><li><a href="global.html#calculateMidpoint">calculateMidpoint</a></li><li><a href="global.html#circleLogicThisfunctionreturnstheshapetypeofthecirclebasedontheconnectedlines.Ifthecircleisnotconnectedtoanyline,itreturnsthedefaultcircleshapetype.Theshapetypeisusedtodeterminetheshapeofthecircle.">circleLogic
+This function returns the shape type of the circle based on the connected
+lines. If the circle is not connected to any line, it returns the default
+circle shape type. The shape type is used to determine the shape of the
+circle.</a></li><li><a href="global.html#doesLineConnectToSVGThisfunctionreturnswhetherthelineconnectstotheSVG.IfthelineconnectstotheSVG,itreturnstrue;otherwise,itreturnsfalse.">doesLineConnectToSVG
+This function returns whether the line connects to the SVG. If the line
+connects to the SVG, it returns true; otherwise, it returns false.</a></li><li><a href="global.html#downwardCurvedLineLogicThisfunctionreturnstheshapetypeofthedownwardcurvedlinebasedontheconnectedlines.Ifthedownwardcurvedlineisnotconnectedtoanyline,itreturnsthedefaultdownwardcurvedlineshapetype.Theshapetypeisusedtodeterminetheshapeofthedownwardcurvedline.">downwardCurvedLineLogic
+This function returns the shape type of the downward curved line based on
+the connected lines. If the downward curved line is not connected to any
+line, it returns the default downward curved line shape type. The shape
+type is used to determine the shape of the downward curved line.</a></li><li><a href="global.html#downwardTriangleFilledLogicThisfunctionreturnstheshapetypeofthedownwardtrianglefilledbasedontheconnectedlines.Ifthedownwardtrianglefilledisnotconnectedtoanyline,itreturnsthedefaultdownwardtrianglefilledshapetype.Theshapetypeisusedtodeterminetheshapeofthedownwardtrianglefilled.">downwardTriangleFilledLogic
+This function returns the shape type of the downward triangle filled based
+on the connected lines. If the downward triangle filled is not connected to
+any line, it returns the default downward triangle filled shape type. The
+shape type is used to determine the shape of the downward triangle filled.</a></li><li><a href="global.html#downwardTriangleLogicThisfunctionreturnstheshapetypeofthedownwardtrianglebasedontheconnectedlines.Ifthedownwardtriangleisnotconnectedtoanyline,itreturnsthedefaultdownwardtriangleshapetype.Theshapetypeisusedtodeterminetheshapeofthedownwardtriangle.">downwardTriangleLogic
+This function returns the shape type of the downward triangle based on the
+connected lines. If the downward triangle is not connected to any line, it
+returns the default downward triangle shape type. The shape type is used to
+determine the shape of the downward triangle.</a></li><li><a href="global.html#exportToLatex">exportToLatex</a></li><li><a href="global.html#extractLatexFromAllSVGs">extractLatexFromAllSVGs</a></li><li><a href="global.html#getConnectedNodeOfSVG">getConnectedNodeOfSVG</a></li><li><a href="global.html#getConnectedNodeTypeForSVGThisfunctionreturnsthenodetypeofthenodeconnectedtotheSVG.IftheSVGisnotconnectedtoanynode,itreturnsnull.">getConnectedNodeTypeForSVG
+This function returns the node type of the node connected to the SVG. If
+the SVG is not connected to any node, it returns null.</a></li><li><a href="global.html#getConnectedNodeTypeForSVGThisfunctionreturnsthenodetypeofthenodeconnectedtotheSVG.IftheSVGisnotconnectedtoanynode,itreturnsnull.">getConnectedNodeTypeForSVG
+This function returns the node type of the node connected to the SVG. If 
+the SVG is not connected to any node, it returns null.</a></li><li><a href="global.html#getConnectedNodeTypeForSVGThisfunctionreturnsthenodetypeofthenodeconnectedtotheSVG.IftheSVGisnotconnectedtoanynode,itreturnsnull.">getConnectedNodeTypeForSVG 
+This function returns the node type of the node connected to the SVG. If
+the SVG is not connected to any node, it returns null.</a></li><li><a href="global.html#getLineDetailsThisfunctionreturnsthedetailsoftheline.Thedetailsincludethelabel,color,curvature,andlinetype.Thelabelisthetextthatappearsontheline.Thecoloristhecoloroftheline.Thecurvatureisthecurvatureoftheline.Thelinetypeisthetypeoftheline.">getLineDetails
+This function returns the details of the line. The details include the label,
+color, curvature, and line type. The label is the text that appears on the
+line. The color is the color of the line. The curvature is the curvature of
+the line. The line type is the type of the line.</a></li><li><a href="global.html#getLineLabelsThisfunctionreturnsthelabelsoftheline.Thelabelsincludetheleftlabelandtherightlabel.Theleftlabelisthetextthatappearsontheleftsideoftheline.Therightlabelisthetextthatappearsontherightsideoftheline.">getLineLabels
+This function returns the labels of the line. The labels include the left
+label and the right label. The left label is the text that appears on the
+left side of the line. The right label is the text that appears on the right
+side of the line.</a></li><li><a href="global.html#invertedSCurveLogicThisfunctionreturnstheshapetypeoftheinvertedScurvebasedontheconnectedlines.IftheinvertedScurveisnotconnectedtoanyline,itreturnsthedefaultinvertedScurveshapetype.">invertedSCurveLogic
+This function returns the shape type of the inverted S curve based on the
+connected lines. If the inverted S curve is not connected to any line, it
+returns the default inverted S curve shape type.</a></li><li><a href="global.html#leftBulgeLogicThisfunctionreturnstheshapetypeoftheleftbulgearcbasedontheconnectedlines.Iftheleftbulgeisnotconnectedtoanyline,itreturnsthedefaultleftbulgeshapetype.">leftBulgeLogic
+This function returns the shape type of the left bulge arc based on the connected
+lines. If the left bulge is not connected to any line, it returns the default
+left bulge shape type.</a></li><li><a href="global.html#parseSVG">parseSVG</a></li><li><a href="global.html#rightBulgeLogicThisfunctiondeterminestheshapeoftheSVGforarightbulge.">rightBulgeLogic
+This function determines the shape of the SVG for a right bulge.</a></li><li><a href="global.html#root">root</a></li><li><a href="global.html#upwardCurvedLineLogic">upwardCurvedLineLogic</a></li><li><a href="global.html#upwardTriangleFilledLogicThisfunctionreturnstheshapetypeoftheupwardtrianglefilledbasedontheconnectedlines.Iftheupwardtrianglefilledisnotconnectedtoanyline,itreturnsthedefaultupwardtrianglefilledshapetype.Theshapetypeisusedtodeterminetheshapeoftheupwardtrianglefilled.">upwardTriangleFilledLogic
+This function returns the shape type of the upward triangle filled based on
+the connected lines. If the upward triangle filled is not connected to any
+line, it returns the default upward triangle filled shape type. The shape
+type is used to determine the shape of the upward triangle filled.</a></li><li><a href="global.html#upwardTriangleLogicThisfunctionreturnstheshapetypeoftheupwardtrianglebasedontheconnectedlines.Iftheupwardtriangleisnotconnectedtoanyline,itreturnsthedefaultupwardtriangleshapetype.Theshapetypeisusedtodeterminetheshapeoftheupwardtriangle.">upwardTriangleLogic
+This function returns the shape type of the upward triangle based on the
+connected lines. If the upward triangle is not connected to any line, it
+returns the default upward triangle shape type. The shape type is used to
+determine the shape of the upward triangle.</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Tue Sep 05 2023 23:57:28 GMT+0100 (British Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

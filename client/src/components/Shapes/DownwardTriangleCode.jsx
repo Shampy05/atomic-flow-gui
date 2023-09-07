@@ -1,6 +1,13 @@
 import SVGShape from "./SvgShape";
 import { Polygon } from "./polygon";
 
+/**
+ * This component is used to render a downward triangle with a black stroke.
+ * 
+ * @param {object} props
+ * 
+ * @returns {JSX.Element} DownwardTriangleCode
+ */
 const DownwardTriangleCode = (props) => {
     const shapeObj = new Polygon({
         points: "25,45 45,10 5,10",

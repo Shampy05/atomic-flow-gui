@@ -1,20 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-    LightModeOutlined,
-    DarkModeOutlined,
     Menu as MenuIcon,
     SettingsOutlined,
-    ArrowDropDownOutlined,
     HelpOutlineOutlined,
 } from "@mui/icons-material";
-import FlexBetween from "components/FlexBetween";
-import { useDispatch } from "react-redux";
-import { setMode } from "state";
-import { AppBar, IconButton, Box, useTheme } from "@mui/material";
+import { AppBar, IconButton, Box } from "@mui/material";
 
+/**
+ * Navbar component containing the menu, settings, and help buttons.
+ * 
+ * @param {object} props
+ * @param {boolean} props.isSidebarOpen - Whether the sidebar is open
+ * @param {function} props.setIsSidebarOpen - Function to set whether the sidebar is open
+ * 
+ * @returns {JSX.Element} Navbar
+ */
 const Navbar = ({ isSidebarOpen, setIsSidebarOpen }) => {
-    const dispatch = useDispatch();
-    const theme = useTheme();
     return (
         <AppBar
             sx={{

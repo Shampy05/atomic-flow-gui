@@ -6,6 +6,25 @@ import Line from "../../components/Lines/LineComponent"
 import ShapeComponent from "../../components/Shapes/ShapeComponent";
 import useCanvasDragAndDrop from "../../utils/UseCanvasDragAndDrop";
 
+/**
+ * Canvas component. It is used to render the canvas, and to handle
+ * the drag and drop functionality of the shapes on the canvas. It also
+ * handles the click functionality of the shapes, which is used to select
+ * the shapes and to draw lines.
+ * 
+ * @param {object} props
+ * @param {function} props.addSVG - Function to add an SVG to the canvas.
+ * @param {array} props.SVGs - Array of SVGs on the canvas.
+ * @param {function} props.setSVGs - Function to set the SVGs on the canvas.
+ * @param {number} props.step - Grid step size.
+ * @param {boolean} props.isDrawing - Whether a shape is currently being drawn.
+ * @param {function} props.setIsDrawing - Function to set whether a shape is currently being drawn.
+ * @param {array} props.lines - Array of lines on the canvas.
+ * @param {function} props.setLines - Function to set the lines on the canvas.
+ * @param {number} props.zoomLevel - Zoom level of the canvas.
+ * 
+ * @returns {JSX.Element} Canvas
+ */
 const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, setLines, zoomLevel }) => {
     const svgRef = useRef();
     const canvasRef = useRef(null);
@@ -16,6 +35,12 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
     const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 });
     const [isLineDrawn, setIsLineDrawn] = useState(false);
 
+    /**
+     * useEffect hook to set the canvas dimensions. This is used to calculate
+     * the grid coordinates of the SVGs.
+     * 
+     * @returns {void}
+     */
     useEffect(() => {
         if (canvasRef.current) {
             setCanvasDimensions({
@@ -25,15 +50,33 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
         }
     }, []);
 
+    /**
+     * useCallback hook to handle the drag end event. This is used to open the
+     * line dialog when the user stops dragging the SVG.
+     * 
+     * @returns {void}
+     */
     const handleDragEnd = useCallback(() => {
         setIsLineDialogOpen(true);
     }, []);
 
+    /**
+     * Function to select an SVG. This is used to select an SVG when the user
+     * clicks on it.
+     */
     const selectSVG = (id) => {
         setSelectedSVG(id);
-        console.log("SVGs", SVGs)
     }
 
+    /**
+     * Function to handle the click event on the canvas. This is used to deselect
+     * the SVG when the user clicks on the canvas. It is also used to calculate
+     * the grid coordinates of the click event. This is used to draw lines.
+     * 
+     * @param {object} event - The event object.
+     * 
+     * @returns {void}
+     */
     const handleCanvasClick = (event) => {
         setSelectedSVG(null);
         const point = d3.pointer(event);
@@ -58,8 +101,20 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
         // Log the coordinates
     };
 
+    /**
+    * Custom hook for handling the drag and drop functionality of the shapes on the canvas.
+    */
     useCanvasDragAndDrop(canvasRef, addSVG, setSVGs, setLines, handleDragEnd);
 
+    /**
+     * Function to handle the mouse down event on the canvas. This is used to draw
+     * lines on the canvas. It is used to set the start position of the line, and
+     * to set the end position of the line when the mouse is released.
+     * 
+     * @param {object} event - The event object.
+     * 
+     * @returns {void}
+     */
     const handleMouseDown = (event) => {
 
         if (!event.target.classList.contains('node')) {
@@ -77,7 +132,14 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
         }]);
     }
 
-
+    /**
+     * Function to handle the mouse move event on the canvas. This is used to draw
+     * lines on the canvas. It is used to set the end position of the line.
+     * 
+     * @param {object} event - The event object.
+     * 
+     * @returns {void}
+     */
     const handleMouseMove = (event) => {
         if (!isDrawing) return;
         const point = d3.pointer(event);
@@ -94,6 +156,15 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
         });
     }
 
+    /**
+     * Function to handle the mouse up event on the canvas. It is used to set the
+     * isDrawing state to false, which is used to determine whether a line is being
+     * drawn.
+     * 
+     * @param {object} event - The event object.
+     * 
+     * @returns {void}
+     */
     const handleMouseUp = (event) => {
         setIsDrawing(false);
         // only set the dialog open if the mouse is released on a node
@@ -102,7 +173,12 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
         }
     }
 
-
+    /**
+     * useEffect hook to handle the key down event. This is used to delete the
+     * selected SVG when the user presses the delete or backspace key.
+     * 
+     * @returns {void}
+     */
     useEffect(() => {
         const handleKeyDown = (e) => {
             // If it's not the delete or backspace key, do nothing
@@ -123,6 +199,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
             setSelectedSVG(null);
         };
 
+        // Add event listener on mount
         document.addEventListener("keydown", handleKeyDown);
 
         // Cleanup event listener on unmount
@@ -202,6 +279,7 @@ const Canvas = ({ addSVG, SVGs, setSVGs, step, isDrawing, setIsDrawing, lines, s
                     setLines={setLines}
                     isLineDialogOpen={isLineDialogOpen}
                     setIsLineDialogOpen={setIsLineDialogOpen}
+                    canvasDimensions={canvasDimensions}
                     setSVGs={setSVGs}
                 />
             </svg>

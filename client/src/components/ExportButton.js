@@ -2,10 +2,26 @@ import React from "react";
 import { exportToLatex } from "../latexExportLogic";
 import {Box, Button} from "@mui/material";
 
+/**
+ * Expor button component that exports the current canvas to latex code and
+ * displays it in the console. 
+ * 
+ * @param {function} onExportLatex - function that exports the current canvas to latex code
+ * @param {Array} SVGs - array of SVG elements
+ * @param {Array} lines - array of line elements
+ * 
+ * @returns {Object} JSX representation of the export button
+ */
 const ExportButton = ({ onExportLatex, SVGs, lines }) => {
-    const handleExport = () => {
+    const handleExport = async () => {
         const latexCode = exportToLatex(SVGs, lines);
-        console.warn("latexCode", latexCode);
+
+        try {
+            await navigator.clipboard.writeText(latexCode);
+            alert('Latex code copied to clipboard!'); // Inform the user
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
     }
 
     return (

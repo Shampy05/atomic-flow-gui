@@ -1,6 +1,9 @@
 const { styled } = require("@mui/material");
 const { Box } = require("@mui/system");
 
+/**
+ * A flexbox with space between the items. 
+ */
 const FlexBetween = styled(Box)({
     display: 'flex',
     justifyContent: 'space-between',

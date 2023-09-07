@@ -8,8 +8,11 @@ import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import Layout from "scenes/layout";
 import Canvas from "scenes/canvas";
 
-
-
+/**
+ * Main app component that renders the layout and canvas scenes. 
+ * 
+ * @returns {Object} JSX representation of the app component
+ */
 function App() {
   const mode = useSelector((state) => state.global.mode);
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);

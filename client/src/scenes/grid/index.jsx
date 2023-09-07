@@ -1,7 +1,25 @@
 import React, { useState, useMemo } from 'react';
 
+/**
+ * Grid component for rendering the grid on the canvas. This component is used by the
+ * Canvas component. It is used to render the grid on the canvas.
+ * 
+ * @param {object} props
+ * @param {number} props.width
+ * @param {number} props.height
+ * @param {number} props.zoomLevel
+ * @param {number} props.step
+ * 
+ * @returns {JSX.Element} Grid
+ */
 const Grid = ({ width, height, zoomLevel, step }) => {
-
+    /**
+     * This is the grid that is rendered on the canvas. It is a 2D array of SVG elements that
+     * are rendered on the canvas. The grid is rendered using the useMemo hook, which is used
+     * to avoid unnecessary re-renders.
+     * 
+     * @returns {JSX.Element[]} grid
+     */
     const grid = useMemo(() => {
         const elements = [];
 

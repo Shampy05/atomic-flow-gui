@@ -1,5 +1,15 @@
 import { NODE_TYPES, SHAPE_TYPES } from "../constants";
 
+/**
+ * @function getConnectedNodeTypeForSVG
+ * This function returns the node type of the node connected to the SVG. If
+ * the SVG is not connected to any node, it returns null.
+ * 
+ * @param {Object} line - line object
+ * @param {Object} SVG - SVG object
+ * 
+ * @returns {string} The node type of the node connected to the SVG.
+ */
 const getConnectedNodeTypeForSVG = (line, SVG) => {
     if (line.startNode && line.startNode.svgId === SVG.id) {
         return line.startNode.type;
@@ -9,6 +19,18 @@ const getConnectedNodeTypeForSVG = (line, SVG) => {
     return null;
 }
 
+/**
+ * @function upwardTriangleFilledLogic
+ * This function returns the shape type of the upward triangle filled based on
+ * the connected lines. If the upward triangle filled is not connected to any
+ * line, it returns the default upward triangle filled shape type. The shape
+ * type is used to determine the shape of the upward triangle filled.
+ * 
+ * @param {Object} SVG - SVG object
+ * @param {Array} connectedLines - array of connected line objects
+ * 
+ * @returns {string} The shape type of the upward triangle filled.
+ */
 export const upwardTriangleFilledLogic = (SVG, connectedLines) => {
     const connectedNodeTypes = new Set();
     const lineCurvatures = {};

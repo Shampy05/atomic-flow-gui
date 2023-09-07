@@ -14,13 +14,16 @@ const store = configureStore({
     }
 })
 
+/**
+ * Renders the app component to the root element in the index.html file.
+ * 
+ * @returns {Object} JSX representation of the app component
+ */
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <React.StrictMode>
         <Provider store={store}>
             <DndProvider backend={HTML5Backend}>
                 <App/>
             </DndProvider>
         </Provider>
-    </React.StrictMode>
 );

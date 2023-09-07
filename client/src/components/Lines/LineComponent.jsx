@@ -1,77 +1,86 @@
-import { calculateMidpoint, calculateControlPoint, calculateDoubleLineOffset } from "./ControlPoints";
+import { calculateMidpoint, calculateControlPoint, calculateDoubleLineOffset, calculateLineGridCoordinates } from "./ControlPoints";
 import LinePropertiesDialog from "./LinePropertiesDialog";
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
-
-export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, setSVGs }) => {
+/**
+ * Component representing a draggable line with control points and handles to adjust the curve
+ * 
+ * @param {Object} props
+ * @param {Array} props.lines - Array of line objects
+ * @param {Boolean} props.isLineDialogOpen - Boolean to indicate if the line properties dialog is open
+ * @param {Function} props.setIsLineDialogOpen - Function to set the isLineDialogOpen state
+ * @param {Function} props.setLines - Function to set the lines state
+ * @param {Object} props.canvasDimensions - Object containing the width and height of the canvas
+ * 
+ * @returns {React.Component}
+ */
+export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, canvasDimensions}) => {
     const svgRef = useRef(null);
     const [controlPoints, setControlPoints] = useState({});
 
+    /**
+     * Function to handle saving the line properties
+     * 
+     * @param {String} color - Color of the line
+     * @param {String} leftText - Text to display on the left side of the line
+     * @param {String} rightText - Text to display on the right side of the line
+     * @param {String} type - Type of line (single or double)
+     *
+     * @returns {void}
+     */
     const handleSave = (color, leftText, rightText, type) => {
-        setLines(prev => {
-            const updatedLines = [...prev];
-            const lastLineIndex = updatedLines.length - 1;
-            if (lastLineIndex >= 0) {
-                const lastLine = updatedLines[lastLineIndex];
-                Object.assign(lastLine, { color, leftText, rightText, type });
-            }
-            return updatedLines;
-        });
+        setLines(prev => prev.map((line, index) => index === prev.length - 1 ? { ...line, color, leftText, rightText, type } : line));
     }
 
-    const updateControlPoints = (updates, callback) => {
-        setControlPoints(prev => {
-            const newState = { ...prev, ...updates };
-            callback && callback(newState);
-            return newState;
-        });
+    /**
+     * Function to attach drag behavior to the control points and handles
+     * 
+     * @returns {void}
+     */
+    const attachDragBehavior = () => {
+        const drag = d3.drag().on("drag", function (event) { handleDrag(event, this) });
+        d3.selectAll("circle").call(drag);
     };
 
-    const attachDragBehavior = () => {
-        const drag = d3.drag()
-            .on("drag", function (event) {
-                handleDrag(event, this);
-            });
-
-        d3.selectAll("circle").call(drag);
-    }
-
-    const handleDrag = (event, element) => {
+    /**
+     * Function to handle dragging of the control points and handles
+     * 
+     * @param {Object} event - D3 drag event
+     * @param {Object} element - D3 element being dragged
+     * 
+     * @returns {void}
+     */
+    const handleDrag = async (event, element) => {
         const circle = d3.select(element);
         const id = circle.attr("data-id");
         const type = circle.attr("data-type");
         const newX = +circle.attr("cx") + event.dx;
         const newY = +circle.attr("cy") + event.dy;
 
-
-        const updates = {};
+        let updates;
         if (type === "control") {
-            updates[id] = {
-                ...controlPoints[id],
-                x: newX,
-                y: newY
-            };
-        } else if (type === "handle1") {
-            updates[id] = {
-                ...controlPoints[id],
-                handle1: { x: newX, y: newY }
-            };
-        } else if (type === "handle2") {
-            updates[id] = {
-                ...controlPoints[id],
-                handle2: { x: newX, y: newY }
-            };
+            updates = { [id]: { ...controlPoints[id], x: newX, y: newY } };
+        } else if (["handle1", "handle2"].includes(type)) {
+            updates = { [id]: { ...controlPoints[id], [type]: { x: newX, y: newY } } };
         }
 
-        updateControlPoints(updates, () => {
+        if (updates) {
+            await setControlPoints(prev => ({ ...prev, ...updates }));
             updateBezier();
-        });
+            circle.attr("cx", newX).attr("cy", newY);
+        }
+    };
 
-        circle.attr("cx", newX).attr("cy", newY);
-
-    }
-
+    /**
+     * Function to calculate the distance between a point and a line
+     * 
+     * @param {Object} point - Point object containing x and y coordinates
+     * @param {Object} lineStart - Point object containing x and y coordinates of the start of the line
+     * @param {Object} lineEnd - Point object containing x and y coordinates of the end of the line
+     * 
+     * @returns {Number} - Distance between the point and the line
+     */
     const distanceFromLine = (point, lineStart, lineEnd) => {
         const { x: x1, y: y1 } = lineStart;
         const { x: x2, y: y2 } = lineEnd;
@@ -81,6 +90,14 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
             Math.sqrt((y2 - y1) ** 2 + (x2 - x1) ** 2);
     };
 
+    /**
+     * Function to check if a line is straight
+     * 
+     * @param {Object} line - Line object
+     * @param {Number} threshold - Threshold to determine if a line is straight
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is straight
+     */
     const isStraightLine = (line, threshold = 5) => {  // default threshold of 5 units
         const control = controlPoints[line.id] || calculateControlPoint(line.start, line.end);
         const distance = distanceFromLine(control, line.start, line.end);
@@ -88,48 +105,68 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
         return distance <= threshold;
     };
 
-
-
-    const isLineConcave = (line, threshold = 5) => {
-        const { start, end } = line;
-
-        const midpoint = calculateMidpoint(start, end);
-        const isMidpointLeftOfStart = midpoint.x < start.x;
-        const isMidpointLeftOfEnd = midpoint.x < end.x;
-        const isMidpointRightOfStart = midpoint.x > start.x;
-        const isMidpointRightOfEnd = midpoint.x > end.x;
-
-        // TODO: Change midpoint on moving the bezier control points
-        return (isMidpointLeftOfStart && isMidpointLeftOfEnd)
-            || (isMidpointRightOfStart && isMidpointRightOfEnd);
-    }
-
+    /**
+     * Function to check if a line is bulging left or right
+     * 
+     * @param {Object} start - Point object containing x and y coordinates of the start of the line
+     * @param {Object} end - Point object containing x and y coordinates of the end of the line
+     * @param {Object} control - Point object containing x and y coordinates of the control point
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is bulging left or right
+     */
     const isLineBulgingLeft = (start, end, control) => {
         return control.x < start.x && control.x < end.x;
     };
 
+    /**
+     * Function to check if a line is bulging left or right
+     * 
+     * @param {Object} start - Point object containing x and y coordinates of the start of the line
+     * @param {Object} end - Point object containing x and y coordinates of the end of the line
+     * @param {Object} control - Point object containing x and y coordinates of the control point
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is bulging left or right
+     */
     const isLineBulgingRight = (start, end, control) => {
         return control.x > start.x && control.x > end.x;
     };
 
-    // Function to calculate the signed area of the triangle formed by three points
+    /**
+     * Function to calculate the signed area of a triangle. Used to determine if a line is an S-curve. 
+     * 
+     * @param {Object} p1 - Point object containing x and y coordinates of the first point
+     * @param {Object} p2 - Point object containing x and y coordinates of the second point
+     * @param {Object} p3 - Point object containing x and y coordinates of the third point
+     * 
+     * @returns {Number} - Signed area of the triangle
+     */
     const signedArea = (p1, p2, p3) => {
-        console.warn("p1", p1)
-        console.warn("p1.x", p1.x)
-        console.warn("p1.y", p1.y)
-        console.warn("p2", p2)
-        console.warn("p2.x", p2.x)
-        console.warn("p2.y", p2.y)
-        console.warn("p3", p3)
-        console.warn("p3.x", p3.x)
-        console.warn("p3.y", p3.y)
         return (p1.x * (p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y)) / 2;
     };
 
+    /**
+     * Function to calculate the distance between two points. 
+     * 
+     * @param {Object} p1 - Point object containing x and y coordinates of the first point
+     * @param {Object} p2 - Point object containing x and y coordinates of the second point
+     * 
+     * @returns {Number} - Distance between the two points
+     */
     const distance = (p1, p2) => {
         return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
     };
 
+    /**
+     * Function to check if a line is an S-curve. If one control point is closer to the start and the other is closer to the end
+     * and they have opposite signed areas (heights), then the line is an S-curve.
+     * 
+     * @param {Object} start - Point object containing x and y coordinates of the start of the line
+     * @param {Object} end - Point object containing x and y coordinates of the end of the line
+     * @param {Object} handle1 - Point object containing x and y coordinates of the first control point
+     * @param {Object} handle2 - Point object containing x and y coordinates of the second control point
+     * 
+     * @returns {Boolean} - Boolean indicating if the line is an S-curve
+     */
     const isSCurve = (start, end, handle1, handle2) => {
         const area1 = signedArea(start, end, handle1);
         const area2 = signedArea(start, end, handle2);
@@ -137,8 +174,6 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
         const distanceStartToHandle1 = distance(start, handle1);
         const distanceStartToHandle2 = distance(start, handle2);
 
-        // Check if one control point is closer to start and the other is closer to end
-        // and they have opposite signed areas (heights)
         return (
             ((distanceStartToHandle1 < distanceStartToHandle2) && (area1 > 0 && area2 < 0)) ||
             ((distanceStartToHandle2 < distanceStartToHandle1) && (area2 > 0 && area1 < 0))
@@ -150,7 +185,13 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
     };
 
 
-
+    /**
+     * Function to update the bezier curve of a line. If no control points are passed in, the control points will be calculated.
+     * 
+     * @param {Object} updatedControlPoints - Object containing the control points for each line
+     * 
+     * @returns {void}
+     */
     const updateBezier = (updatedControlPoints = controlPoints) => {
         lines.forEach(line => {
             let control = updatedControlPoints[line.id];
@@ -173,14 +214,19 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
             } else {
                 line.curvature = "curved";
             }
-            console.warn("line.midpoint", line.midpoint)
-            console.warn("line.curvature", line.curvature)
 
             updatePath(line, control);
         });
     }
 
-
+    /**
+     * Function to update the path of a line. If the line is a double line, two paths will be updated.
+     * 
+     * @param {Object} line - Line object
+     * @param {Object} control - Control point object
+     * 
+     * @returns {void}
+     */
     const updatePath = (line, control) => {
         if (line.type === 'single'  && control.handle1 && control.handle2) {
             d3.select(`#path-${line.id}`)
@@ -194,19 +240,44 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
         }
     }
 
+    /**
+     * Function to get the path of a line with an offset. Used for double lines.
+     * 
+     * @param {Object} line - Line object
+     * @param {Object} control - Control point object
+     * @param {Number} offsetX - X offset
+     * @param {Number} offsetY - Y offset
+     * 
+     * @returns {String} - Path of the line with the offset
+     */
     const getPathWithOffset = (line, control, offsetX, offsetY) => {
         return `M${line.start.x + offsetX},${line.start.y + offsetY}Q${control.x + offsetX},${control.y + offsetY},${line.end.x + offsetX},${line.end.y + offsetY}`;
     }
 
+    /**
+     * Function to update the control points and handles when the lines change
+     * 
+     * @returns {void}
+     */
     useEffect(() => {
         attachDragBehavior();
     }, [lines, controlPoints]);
 
 
+    /**
+     * Function to initialize the control points when the component mounts
+     * 
+     * @returns {void}
+     */
     useEffect(() => {
         initializeControlPoints();
     }, []);
 
+    /**
+     * Function to initialize the control points for each line. If the control point does not exist, it will be calculated.
+     * 
+     * @returns {void}
+     */
     const initializeControlPoints = () => {
         const newControlPoints = { ...controlPoints };
         lines.forEach(line => {
@@ -229,7 +300,11 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
     }
 
 
-
+    /**
+     * Function to update the bezier curves when the control points change. 
+     * 
+     * @returns {void}
+     */
     useEffect(() => {
         updateBezier();
     }, [controlPoints]);
@@ -242,7 +317,8 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
                 } else {
                     line.curvature = "curved";
                 }
-                console.log("line.curvature", line.curvature)
+                line.gridCoordinates = calculateLineGridCoordinates(line, canvasDimensions);
+                console.warn("line.gridCoordinates", line.gridCoordinates)
                 return (
                     <LineFragment
                         key={index}
@@ -258,6 +334,19 @@ export const Line = ({ lines, isLineDialogOpen, setIsLineDialogOpen, setLines, s
     );
 };
 
+/**
+ * Component representing a line with control points and handles to adjust the curve.
+ * This component is used to render the line and the control points and handles.
+ * 
+ * @param {Object} props
+ * @param {Object} props.line - Line object
+ * @param {Object} props.controlPoints - Object containing the control points for each line
+ * @param {Boolean} props.isLineDialogOpen - Boolean to indicate if the line properties dialog is open
+ * @param {Function} props.setIsLineDialogOpen - Function to set the isLineDialogOpen state
+ * @param {Function} props.handleSave - Function to handle saving the line properties
+ * 
+ * @returns {React.Component}
+ */
 const LineFragment = ({ line, controlPoints, isLineDialogOpen, setIsLineDialogOpen, handleSave }) => {
     let control = controlPoints[line.id];
     if (!control) {
